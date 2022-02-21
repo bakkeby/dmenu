@@ -1,0 +1,67 @@
+/* See LICENSE file for copyright and license details. */
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "util.h"
+
+unsigned long settings = 0;
+
+void *
+ecalloc(size_t nmemb, size_t size)
+{
+	void *p;
+
+	if (!(p = calloc(nmemb, size)))
+		die("calloc:");
+	return p;
+}
+
+void
+die(const char *fmt, ...) {
+	va_list ap;
+
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+
+	if (fmt[0] && fmt[strlen(fmt)-1] == ':') {
+		fputc(' ', stderr);
+		perror(NULL);
+	} else {
+		fputc('\n', stderr);
+	}
+
+	exit(1);
+}
+
+int
+enabled(const long functionality)
+{
+	return (settings & functionality) > 0;
+}
+
+int
+disabled(const long functionality)
+{
+	return !(settings & functionality);
+}
+
+void
+enablefunc(const long functionality)
+{
+	settings |= functionality;
+}
+
+void
+disablefunc(const long functionality)
+{
+	settings &= ~functionality;
+}
+
+void
+togglefunc(const long functionality)
+{
+	settings ^= functionality;
+}

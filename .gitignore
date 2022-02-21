@@ -1,0 +1,7 @@
+*.o
+*.txt
+*.sh
+config.h
+patches.h
+dmenu
+stest
