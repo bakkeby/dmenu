@@ -693,7 +693,7 @@ xinitvisual()
 
 	XFree(infos);
 
-	if (!visual || !disabled(Alpha)) {
+	if (!visual || disabled(Alpha)) {
 		visual = DefaultVisual(dpy, screen);
 		depth = DefaultDepth(dpy, screen);
 		cmap = DefaultColormap(dpy, screen);
