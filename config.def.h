@@ -6,10 +6,9 @@ static char *fonts[] =
 {
 	"monospace:size=10"
 };
-static char *prompt            = NULL;      /* -p  option; prompt to the left of input field */
-static const char *dynamic     = NULL;      /* -dy option; dynamic command to run on input change */
-static int min_width = 500;                 /* minimum width when centered */
 
+static char *prompt        = NULL;      /* -p  option; prompt to the left of input field */
+static const char *dynamic = NULL;      /* -dy option; dynamic command to run on input change */
 static const char *lsymbol = "<"; // shown when there are more items on the left
 static const char *rsymbol = ">"; // shown when there are more items on the right
 
@@ -45,8 +44,7 @@ static const unsigned int alphas[SchemeLast][2] = {
 	[SchemeNorm] = { OPAQUE, 0xd0 },
 };
 
-static
-char *colors[SchemeLast][ColCount] = {
+static char *colors[SchemeLast][ColCount] = {
 	/*                        fg         bg         resource prefix */
 	[SchemeNorm]          = { "#bbbbbb", "#222222", "norm" },
 	[SchemeSel]           = { "#eeeeee", "#005577", "sel" },
@@ -62,8 +60,9 @@ char *colors[SchemeLast][ColCount] = {
 static unsigned int lines      = 0;
 /* -g option; if nonzero, dmenu uses a grid comprised of columns and lines */
 static unsigned int columns    = 0;
-static unsigned int lineheight = 0;         /* -h option; minimum height of a menu line     */
+static unsigned int lineheight = 0; /* -h option; minimum height of a menu line */
 static unsigned int min_lineheight = 8;
+static unsigned int min_width  = 500; /* minimum width when centered */
 static unsigned int maxhist    = 15;
 static int histnodup           = 1;	/* if 0, record repeated histories */
 
