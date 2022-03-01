@@ -24,7 +24,6 @@
                              * MAX(0, MIN((y)+(h),(r).y_org+(r).height) - MAX((y),(r).y_org)))
 #define LENGTH(X)             (sizeof X / sizeof X[0])
 #define TEXTW(X)              (drw_fontset_getwidth(drw, (X)) + lrpad)
-
 #define OPAQUE 0xffU
 
 /* enums */
@@ -82,7 +81,6 @@ static Drw *drw;
 static Clr *scheme[SchemeLast];
 
 #include "lib/include.h"
-
 #include "config.h"
 
 static int (*fstrncmp)(const char *, const char *, size_t) = strncmp;
@@ -106,6 +104,7 @@ static void xinitvisual(void);
 static void readstdin(void);
 static void run(void);
 static void setup(void);
+static void shell_escape(const char *s);
 static void usage(void);
 
 #include "lib/include.c"
@@ -179,7 +178,7 @@ drawitem(struct item *item, int x, int y, int w)
 		drw_setscheme(drw, scheme[SchemeSel]);
 	else if (item->hp)
 		drw_setscheme(drw, scheme[SchemeHp]);
-	else if (enabled(HighlightAdjacent) && (item->left == sel || item->right == sel))
+	else if (enabled(HighlightAdjacent) && columns < 2 && (item->left == sel || item->right == sel))
 		drw_setscheme(drw, scheme[SchemeAdjacent]);
 	else if (issel(item->id))
 		drw_setscheme(drw, scheme[SchemeOut]);
@@ -928,6 +927,32 @@ setup(void)
 }
 
 static void
+shell_escape(const char *s)
+{
+	int i = 0, j = 0;
+	char buf[BUFSIZ] = "";
+	while (j < BUFSIZ) {
+		switch (text[j]) {
+		case '?':
+		case '&':
+		case '=':
+		case '(':
+		case ')':
+		case '{':
+		case '}':
+			buf[i++] = '\\';
+			break;
+		}
+		buf[i++] = text[j++];
+
+		if (text[j - 1] == '\0') {
+			strcpy(text, buf);
+			break;
+		}
+	}
+}
+
+static void
 usage(void)
 {
 	fputs("usage: dmenu [-bcfiIjJkKnNrRsStuUvxyz]"
@@ -971,7 +996,7 @@ usage(void)
 	fprintf(stderr, "\nAppearance:\n");
 	fprintf(stderr, ofmt, "-bw <width>", "specifies the border width", "");
 	fprintf(stderr, ofmt, "-h <height>", "specifies the height of dmenu lines", "");
-	fprintf(stderr, ofmt, "-p <prompt>", "defines the prompt to be displayed to the left of the input field", "");
+	fprintf(stderr, ofmt, "-p <text>, -prompt <text>", "defines the prompt to be displayed to the left of the input field", "");
 	fprintf(stderr, ofmt, "-l <lines>", "specifies the number of lines for grid presentation", "");
 	fprintf(stderr, ofmt, "-g <columns>", "specifies the number of columns for grid presentation", "");
 
@@ -1038,6 +1063,8 @@ usage(void)
 	fprintf(stderr, ofmt, "    -NoPrintInputText", "dmenu to print the text of the selected item", disabled(PrintInputText) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -PromptIndent", "makes dmenu indent items at the same level as the prompt on multi-line views", enabled(PromptIndent) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -NoPromptIndent", "items on multi-line views are not indented", disabled(PromptIndent) ? " (default)" : "");
+	fprintf(stderr, ofmt, "    -ShellEscape", "makes dmenu escape user input before printing to the shell", enabled(ShellEscape) ? " (default)" : "");
+	fprintf(stderr, ofmt, "    -NoShellEscape", "dmenu will not escape user input", disabled(ShellEscape) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -ShowNumbers", "makes dmenu display the number of matched and total items in the top right corner", enabled(ShowNumbers) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -NoShowNumbers", "dmenu will not show item count", disabled(ShowNumbers) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -TabSeparatedValues", "makes dmenu hide values following a tab character", enabled(TabSeparatedValues) ? " (default)" : "");
@@ -1182,6 +1209,10 @@ main(int argc, char *argv[])
 			enablefunc(PromptIndent);
 		} else if arg("-NoPromptIndent") {
 			disablefunc(PromptIndent);
+		} else if arg("-ShellEscape") {
+			enablefunc(ShellEscape);
+		} else if arg("-NoShellEscape") {
+			disablefunc(ShellEscape);
 		} else if arg("-ShowNumbers") {
 			enablefunc(ShowNumbers);
 		} else if arg("-NoShowNumbers") {
@@ -1208,7 +1239,7 @@ main(int argc, char *argv[])
 			fast = 1;
 		} else if arg("-H") {
 			histfile = argv[++i];
-		} else if arg("-p") { /* adds prompt to left of input field */
+		} else if (arg("-p") || arg("-prompt")) { /* adds prompt to left of input field */
 			prompt = argv[++i];
 		} else if arg("-h") { /* minimum height of one menu line */
 			lineheight = atoi(argv[++i]);

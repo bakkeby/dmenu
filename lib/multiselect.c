@@ -22,8 +22,11 @@ printsel(unsigned int state)
 			printf("%d\n", sel->index);
 		else
 			puts(sel->text);
-	} else
+	} else {
+		if (enabled(ShellEscape))
+			shell_escape(text);
 		puts(text);
+	}
 }
 
 static void

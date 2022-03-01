@@ -3,13 +3,37 @@
 dmenu \- dynamic menu
 .SH SYNOPSIS
 .B dmenu
-.RB [ \-bfiv ]
+.RB [ \-bcfiIjJkKnNrRsStuUvxyz ]
+.RB [ \-bw
+.IR width ]
+.RB [ \-g
+.IR columns ]
 .RB [ \-l
 .IR lines ]
-.RB [ \-m
-.IR monitor ]
 .RB [ \-p
 .IR prompt ]
+.RB [ \-dy
+.IR command ]
+.RB [ \-it
+.IR text ]
+.RB [ \-hp
+.IR items ]
+.RB [ \-H
+.IR histfile ]
+.RB [ \-h
+.IR height ]
+.RB [ \-ps
+.IR index ]
+.RB [ \-x
+.IR offset ]
+.RB [ \-y
+.IR offset ]
+.RB [ \-z
+.IR width ]
+.RB [ \-m
+.IR monitor ]
+.RB [ \-w
+.IR windowid ]
 .RB [ \-fn
 .IR font ]
 .RB [ \-nb
@@ -20,8 +44,34 @@ dmenu \- dynamic menu
 .IR color ]
 .RB [ \-sf
 .IR color ]
-.RB [ \-w
-.IR windowid ]
+.RB [ \-ob
+.IR color ]
+.RB [ \-of
+.IR color ]
+.RB [ \-hb
+.IR color ]
+.RB [ \-hf
+.IR color ]
+.RB [ \-ab
+.IR color ]
+.RB [ \-af
+.IR color ]
+.RB [ \-bb
+.IR color ]
+.RB [ \-bf
+.IR color ]
+.RB [ \-pb
+.IR color ]
+.RB [ \-pf
+.IR color ]
+.RB [ \-nhb
+.IR color ]
+.RB [ \-nhf
+.IR color ]
+.RB [ \-shb
+.IR color ]
+.RB [ \-shf
+.IR color ]
 .P
 .BR dmenu_run " ..."
 .SH DESCRIPTION
@@ -70,7 +120,7 @@ specifies the border width.
 .BI \-h " height"
 specifies the height of dmenu lines.
 .TP
-.BI \-p " prompt"
+.BI \-p " text, -prompt text"
 defines the prompt to be displayed to the left of the input field.
 .TP
 .BI \-l " lines"
@@ -256,6 +306,12 @@ makes dmenu indent items at the same level as the prompt on multi-line views.
 .TP
 .B \-NoPromptIndent
 items on multi-line views are not indented.
+.TP
+.B \-ShellEscape
+makes dmenu escape user input before printing to the shell.
+.TP
+.B \-NoShellEscape
+dmenu will not escape user input.
 .TP
 .B \-ShowNumbers
 makes dmenu display the number of matched and total items in the top right corner.
