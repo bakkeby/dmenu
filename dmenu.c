@@ -1243,7 +1243,6 @@ main(int argc, char *argv[])
 			prompt = argv[++i];
 		} else if arg("-h") { /* minimum height of one menu line */
 			lineheight = atoi(argv[++i]);
-			lineheight = MAX(lineheight, min_lineheight); /* reasonable default in case of value too small/negative */
 		} else if arg("-w") { /* embedding window id */
 			embed = argv[++i];
 		} else if arg("-ps") { /* preselected item */

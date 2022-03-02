@@ -62,7 +62,6 @@ static unsigned int lines      = 0;
 /* -g option; if nonzero, dmenu uses a grid comprised of columns and lines */
 static unsigned int columns    = 0;
 static unsigned int lineheight = 0; /* -h option; minimum height of a menu line */
-static unsigned int min_lineheight = 8;
 static unsigned int min_width  = 500; /* minimum width when centered */
 static unsigned int maxhist    = 15;
 static int histnodup           = 1;	/* if 0, record repeated histories */
