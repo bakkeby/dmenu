@@ -858,7 +858,7 @@ setup(void)
 		} else {
 			x = info[i].x_org + dmx;
 			y = info[i].y_org + (enabled(TopBar) ? dmy : info[i].height - mh - dmy);
-			mw = (dmw ? dmw : info[i].width) - border_width * 2;
+			mw = (dmw ? dmw : info[i].width - sidepad * 2) - border_width * 2;
 		}
 		XFree(info);
 	} else
@@ -1045,6 +1045,8 @@ usage(void)
 	fprintf(stderr, ofmt, "-r, -RestrictReturn", "disables Shift-Return and Ctrl-Return to restrict dmenu to only output one item", enabled(RestrictReturn) ? " (default)" : "");
 	fprintf(stderr, ofmt, "-R, -NoRestrictReturn", "enables Shift-Return and Ctrl-Return to allow dmenu to output more than one item", disabled(RestrictReturn) ? " (default)" : "");
 	fprintf(stderr, ofmt, "-v", "prints version information to stdout, then exits", "");
+	fprintf(stderr, ofmt, "-xpad <offset>", "sets the horizontal padding value for dmenu", "");
+	fprintf(stderr, ofmt, "-ypad <offset>", "sets the vertical padding value for dmenu", "");
 	fprintf(stderr, ofmt, "    -Alpha", "enables transparency", enabled(Alpha) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -NoAlpha", "disables transparency", disabled(Alpha) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -ColorEmoji", "enables color emoji in dmenu (requires libxft-bgra)", enabled(ColorEmoji) ? " (default)" : "");
@@ -1251,6 +1253,10 @@ main(int argc, char *argv[])
 			dynamic = argv[++i];
 		} else if arg("-hp") { /* high priority items */
 			hpitems = tokenize(argv[++i], ",", &hplength);
+		} else if arg("-xpad") { /* sets horizontal padding */
+			sidepad = atoi(argv[++i]);
+		} else if arg("-ypad") { /* sets vertical padding */
+			vertpad = atoi(argv[++i]);
 		/* Color arguments */
 		} else if arg("-fn") { /* font or font set */
 			fonts[0] = argv[++i];
@@ -1307,6 +1313,10 @@ main(int argc, char *argv[])
 
 	if (lineheight == -1)
 		lineheight = drw->fonts->h * 2.5;
+	if (!dmx && !dmy) {
+		dmx = sidepad;
+		dmy = vertpad;
+	}
 
 #ifdef __OpenBSD__
 	if (pledge("stdio rpath", NULL) == -1)

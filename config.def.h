@@ -74,3 +74,7 @@ static const char worddelimiters[] = " ";
 
 /* Default size of the window border */
 static unsigned int border_width = 0;
+
+/* Vertical and horizontal padding of dmenu in relation to monitor border */
+static int vertpad = 0;
+static int sidepad = 0;
