@@ -987,11 +987,11 @@ usage(void)
 	fprintf(stderr, ofmt, "-t", "dmenu is shown at the top of the screen", enabled(TopBar) ? " (default)" : "");
 	fprintf(stderr, ofmt, "-b", "dmenu is shown at the bottom of the screen", disabled(TopBar) ? " (default)" : "");
 	fprintf(stderr, ofmt, "-c", "dmenu is shown in the center of the screen", enabled(Centered) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-w <windowid>", "embed into the given window ID", "");
+	fprintf(stderr, ofmt, "-e <windowid>", "embed into the given window ID", "");
 	fprintf(stderr, ofmt, "-m <monitor>", "specifies the monitor index to place dmenu on (starts at 0)", "");
 	fprintf(stderr, ofmt, "-x <offset>", "specifies the x position relative to monitor", "");
 	fprintf(stderr, ofmt, "-y <offset>", "specifies the y position relative to monitor", "");
-	fprintf(stderr, ofmt, "-z <width>", "specifies the width of dmenu", "");
+	fprintf(stderr, ofmt, "-w <width>", "specifies the width of dmenu", "");
 
 	fprintf(stderr, "\nAppearance:\n");
 	fprintf(stderr, ofmt, "-bw <width>", "specifies the border width", "");
@@ -1143,7 +1143,7 @@ main(int argc, char *argv[])
 		} else if arg("-y") { /* window y offset (from bottom up if -b) */
 			dmy = atoi(argv[++i]);
 			disablefunc(Centered);
-		} else if arg("-z") { /* make dmenu this wide */
+		} else if (arg("-w") || arg("-z")) { /* make dmenu this wide, -z for compatibility reasons */
 			dmw = atoi(argv[++i]);
 
 		/* Functionality toggles */
@@ -1235,6 +1235,8 @@ main(int argc, char *argv[])
 			columns = atoi(argv[++i]);
 			if (columns && lines == 0)
 				lines = 1;
+		} else if arg("-e") { /* embedding window id */
+			embed = argv[++i];
 		} else if arg("-f") { /* grabs keyboard before reading stdin */
 			fast = 1;
 		} else if arg("-H") {
@@ -1243,8 +1245,6 @@ main(int argc, char *argv[])
 			prompt = argv[++i];
 		} else if arg("-h") { /* minimum height of one menu line */
 			lineheight = atoi(argv[++i]);
-		} else if arg("-w") { /* embedding window id */
-			embed = argv[++i];
 		} else if arg("-ps") { /* preselected item */
 			preselected = atoi(argv[++i]);
 		} else if arg("-dy") { /* dynamic command to run */
