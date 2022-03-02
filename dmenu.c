@@ -852,13 +852,13 @@ setup(void)
 					break;
 
 		if (enabled(Centered)) {
-			mw = MIN(MAX(max_textw() + promptw, min_width), info[i].width);
+			mw = MIN(MAX(max_textw() + promptw, dmw ? dmw : min_width), info[i].width);
 			x = info[i].x_org + ((info[i].width  - mw) / 2);
 			y = info[i].y_org + ((info[i].height - mh) / 2);
 		} else {
 			x = info[i].x_org + dmx;
 			y = info[i].y_org + (enabled(TopBar) ? dmy : info[i].height - mh - dmy);
-			mw = (dmw>0 ? dmw : info[i].width);
+			mw = (dmw ? dmw : info[i].width);
 		}
 		XFree(info);
 	} else
@@ -868,13 +868,13 @@ setup(void)
 			die("could not get embedding window attributes: 0x%lx",
 			    parentwin);
 		if (enabled(Centered)) {
-			mw = MIN(MAX(max_textw() + promptw, min_width), wa.width);
+			mw = MIN(MAX(max_textw() + promptw, dmw ? dmw : min_width), wa.width);
 			x = (wa.width  - mw) / 2;
 			y = (wa.height - mh) / 2;
 		} else {
 			x = dmx;
 			y = enabled(TopBar) ? dmy : wa.height - mh - dmy;
-			mw = (dmw>0 ? dmw : wa.width);
+			mw = (dmw ? dmw : wa.width);
 		}
 	}
 	inputw = MIN(inputw, mw/3);
@@ -1143,7 +1143,7 @@ main(int argc, char *argv[])
 		} else if arg("-y") { /* window y offset (from bottom up if -b) */
 			dmy = atoi(argv[++i]);
 			disablefunc(Centered);
-		} else if arg("-w") { /* make dmenu this wide */
+		} else if arg("-z") { /* make dmenu this wide */
 			dmw = atoi(argv[++i]);
 
 		/* Functionality toggles */
