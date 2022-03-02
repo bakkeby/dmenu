@@ -852,13 +852,13 @@ setup(void)
 					break;
 
 		if (enabled(Centered)) {
-			mw = MIN(MAX(max_textw() + promptw, dmw ? dmw : min_width), info[i].width);
+			mw = MIN(MAX(max_textw() + promptw, dmw ? dmw : min_width), info[i].width) - border_width * 2;
 			x = info[i].x_org + ((info[i].width  - mw) / 2);
 			y = info[i].y_org + ((info[i].height - mh) / 2);
 		} else {
 			x = info[i].x_org + dmx;
 			y = info[i].y_org + (enabled(TopBar) ? dmy : info[i].height - mh - dmy);
-			mw = (dmw ? dmw : info[i].width);
+			mw = (dmw ? dmw : info[i].width) - border_width * 2;
 		}
 		XFree(info);
 	} else
@@ -885,7 +885,7 @@ setup(void)
 	swa.background_pixel = 0;
 	swa.colormap = cmap;
 	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask | ButtonPressMask;
-	win = XCreateWindow(dpy, parentwin, x, y - (enabled(TopBar) ? 0 : border_width * 2), mw - border_width * 2, mh, border_width,
+	win = XCreateWindow(dpy, parentwin, x, y - (enabled(TopBar) ? 0 : border_width * 2), mw, mh, border_width,
 		depth, InputOutput, visual,
 		CWOverrideRedirect|CWBackPixel|CWBorderPixel|CWColormap|CWEventMask, &swa
 	);
