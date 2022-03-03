@@ -579,14 +579,16 @@ insert:
 			break;
 		if (enabled(PrintInputText))
 			puts((sel && ((ev->state & ShiftMask) || !cursor)) ? sel->text : text);
-		else if (enabled(PrintIndex))
-			printf("%d\n", (sel && !(ev->state & ShiftMask)) ? sel->index : -1);
-		else if (enabled(ContinuousOutput))
-			puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
+		else if (enabled(ContinuousOutput)) {
+			if (enabled(PrintIndex))
+				printf("%d\n", (sel && !(ev->state & ShiftMask)) ? sel->index : -1);
+			else
+				puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
+		}
 		if (!(ev->state & ControlMask)) {
 			savehistory((sel && !(ev->state & ShiftMask))
 				    ? sel->text : text);
-			if (disabled(ContinuousOutput) && disabled(PrintInputText) && disabled(PrintIndex))
+			if (disabled(ContinuousOutput) && disabled(PrintInputText))
 				printsel(ev->state);
 			cleanup();
 			exit(0);
@@ -1130,13 +1132,13 @@ main(int argc, char *argv[])
 			continue;
 
 		/* Placement */
-		if arg("-t") { /* dmenu appears at the top of the screen */
+		if (arg("-TopBar") || arg("-t")) { /* dmenu appears at the top of the screen */
 			enablefunc(TopBar);
 			disablefunc(Centered);
-		} else if arg("-b") { /* dmenu appears at the bottom of the screen */
+		} else if (arg("-BottomBar") || arg("-b")) { /* dmenu appears at the bottom of the screen */
 			disablefunc(TopBar);
 			disablefunc(Centered);
-		} else if arg("-c") { /* centers dmenu window on the screen */
+		} else if (arg("-Centered") || arg("-c")) { /* centers dmenu window on the screen */
 			enablefunc(Centered);
 			disablefunc(TopBar);
 		} else if arg("-x") { /* window x offset */
