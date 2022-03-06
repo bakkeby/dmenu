@@ -30,7 +30,7 @@ static const unsigned long
 	ContinuousOutput = 0x40000, // makes dmenu print out selected items immediately rather than at the end
 	FuzzyMatch = 0x80000, // allows fuzzy-matching of items in dmenu
 	PrintInputText = 0x100000, // makes dmenu print the input text instead of the selected item
-	ShellEscape = 0x200000, // escapes user input before returning to the shell (e.g. URLs)
+	FuncPlaceholder0x200000 = 0x200000,
 	FuncPlaceholder0x400000 = 0x400000,
 	FuncPlaceholder0x800000 = 0x800000,
 	FuncPlaceholder0x1000000 = 0x1000000,

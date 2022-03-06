@@ -104,7 +104,6 @@ static void xinitvisual(void);
 static void readstdin(void);
 static void run(void);
 static void setup(void);
-static void shell_escape(const char *s);
 static void usage(void);
 
 #include "lib/include.c"
@@ -929,32 +928,6 @@ setup(void)
 }
 
 static void
-shell_escape(const char *s)
-{
-	int i = 0, j = 0;
-	char buf[BUFSIZ] = "";
-	while (j < BUFSIZ) {
-		switch (text[j]) {
-		case '?':
-		case '&':
-		case '=':
-		case '(':
-		case ')':
-		case '{':
-		case '}':
-			buf[i++] = '\\';
-			break;
-		}
-		buf[i++] = text[j++];
-
-		if (text[j - 1] == '\0') {
-			strcpy(text, buf);
-			break;
-		}
-	}
-}
-
-static void
 usage(void)
 {
 	fputs("usage: dmenu [-bcfiIjJkKnNrRsStuUvxyz]"
@@ -1067,8 +1040,6 @@ usage(void)
 	fprintf(stderr, ofmt, "    -NoPrintInputText", "dmenu to print the text of the selected item", disabled(PrintInputText) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -PromptIndent", "makes dmenu indent items at the same level as the prompt on multi-line views", enabled(PromptIndent) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -NoPromptIndent", "items on multi-line views are not indented", disabled(PromptIndent) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -ShellEscape", "makes dmenu escape user input before printing to the shell", enabled(ShellEscape) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoShellEscape", "dmenu will not escape user input", disabled(ShellEscape) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -ShowNumbers", "makes dmenu display the number of matched and total items in the top right corner", enabled(ShowNumbers) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -NoShowNumbers", "dmenu will not show item count", disabled(ShowNumbers) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -TabSeparatedValues", "makes dmenu hide values following a tab character", enabled(TabSeparatedValues) ? " (default)" : "");
@@ -1213,10 +1184,6 @@ main(int argc, char *argv[])
 			enablefunc(PromptIndent);
 		} else if arg("-NoPromptIndent") {
 			disablefunc(PromptIndent);
-		} else if arg("-ShellEscape") {
-			enablefunc(ShellEscape);
-		} else if arg("-NoShellEscape") {
-			disablefunc(ShellEscape);
 		} else if arg("-ShowNumbers") {
 			enablefunc(ShowNumbers);
 		} else if arg("-NoShowNumbers") {

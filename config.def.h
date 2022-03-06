@@ -30,7 +30,6 @@ static unsigned long functionality = 0
 	|PromptIndent // makes dmenu indent items at the same level as the prompt on multi-line views
 //	|RejectNoMatch // makes dmenu reject input if it would result in no matching item
 //	|RestrictReturn // disables Shift-Return and Ctrl-Return to restrict dmenu to only output one item
-//	|ShellEscape // escapes user input before returning to the shell (e.g. URLs)
 //	|ShowNumbers // makes dmenu display the number of matched and total items in the top right corner
 	|Sort // allow dmenu to sort menu items after matching
 	|TabSeparatedValues // makes dmenu hide values following a tab character
