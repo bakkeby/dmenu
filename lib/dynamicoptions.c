@@ -3,6 +3,11 @@ refreshoptions()
 {
 	int dynlen = strlen(dynamic);
 	char* cmd= malloc(dynlen + strlen(text) + 2);
+
+	/* Clear selections on refresh */
+	for (int i = 0; i < selidsize; i++)
+		selid[i] = -1;
+
 	if (cmd == NULL)
 		die("malloc:");
 	sprintf(cmd, "%s %s", dynamic, text);

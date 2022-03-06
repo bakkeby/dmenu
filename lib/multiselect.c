@@ -1,7 +1,7 @@
 static int
 issel(size_t id)
 {
-	for (int i = 0;i < selidsize;i++)
+	for (int i = 0; i < selidsize; i++)
 		if (selid[i] == id)
 			return 1;
 	return 0;
@@ -10,7 +10,7 @@ issel(size_t id)
 static void
 printsel(unsigned int state)
 {
-	for (int i = 0;i < selidsize;i++)
+	for (int i = 0; i < selidsize; i++)
 		if (selid[i] != -1 && (!sel || sel->id != selid[i])) {
 			if (enabled(PrintIndex))
 				printf("%d\n", selid[i]);
