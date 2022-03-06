@@ -27,7 +27,7 @@ static unsigned long functionality = 0
 //	|PasswordInput // indicates that the input is a password and should be masked
 //	|PrintIndex // makes dmenu print out the 0-based index instead of the matched text itself
 //	|PrintInputText // makes dmenu print the input text instead of the selected item
-//	|PromptIndent // makes dmenu indent items at the same level as the prompt on multi-line views
+	|PromptIndent // makes dmenu indent items at the same level as the prompt on multi-line views
 //	|RejectNoMatch // makes dmenu reject input if it would result in no matching item
 //	|RestrictReturn // disables Shift-Return and Ctrl-Return to restrict dmenu to only output one item
 //	|ShellEscape // escapes user input before returning to the shell (e.g. URLs)
