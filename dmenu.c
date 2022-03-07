@@ -1216,6 +1216,9 @@ main(int argc, char *argv[])
 			prompt = argv[++i];
 		} else if arg("-h") { /* minimum height of one menu line */
 			lineheight = atoi(argv[++i]);
+		} else if arg("-it") { /* initial text */
+		    const char * text = argv[++i];
+		    insert(text, strlen(text));
 		} else if arg("-ps") { /* preselected item */
 			preselected = atoi(argv[++i]);
 		} else if arg("-dy") { /* dynamic command to run */
