@@ -20,9 +20,11 @@ fuzzymatch(void)
 	/* bang - we have so much memory */
 	struct item *it;
 	struct item **fuzzymatches = NULL;
+	struct item *lhpprefix, *hpprefixend;
 	char c;
 	int number_of_matches = 0, i, pidx, sidx, eidx;
 	int text_len = strlen(text), itext_len;
+	lhpprefix = hpprefixend = NULL;
 
 	matches = matchend = NULL;
 
@@ -74,9 +76,16 @@ fuzzymatch(void)
 		matches = matchend = NULL;
 		for (i = 0, it = fuzzymatches[i];  i < number_of_matches && it && \
 				it->text; i++, it = fuzzymatches[i]) {
-			appenditem(it, &matches, &matchend);
+			if (enabled(Sort) && it->hp)
+				appenditem(it, &lhpprefix, &hpprefixend);
+			else
+				appenditem(it, &matches, &matchend);
 		}
 		free(fuzzymatches);
+	}
+	if (lhpprefix) {
+		hpprefixend->right = matches;
+		matches = lhpprefix;
 	}
 	curr = sel = matches;
 

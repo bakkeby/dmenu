@@ -28,9 +28,7 @@ exactmatch(void)
 		if (i != tokc && !(dynamic && *dynamic)) /* not all tokens match */
 			continue;
 		/* exact matches go first, then prefixes with high priority, then prefixes, then substrings */
-		if (disabled(Sort))
- 			appenditem(item, &matches, &matchend);
- 		else if (!tokc || !fstrncmp(text, item->text, textsize))
+ 		if (!tokc || disabled(Sort) || !fstrncmp(text, item->text, textsize))
 			appenditem(item, &matches, &matchend);
 		else if (item->hp && !fstrncmp(tokv[0], item->text, len))
 			appenditem(item, &lhpprefix, &hpprefixend);
