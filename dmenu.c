@@ -53,8 +53,8 @@ struct item {
 static char text[BUFSIZ] = "";
 static char *embed;
 static int bh, mw, mh;
-static int dmx = 0, dmy = 0; /* put dmenu at these x and y offsets */
-static unsigned int dmw = 0; /* make dmenu this wide */
+static int dmx = ~0, dmy = ~0, dmw = 0; /* put dmenu at these x and y offsets and w width */
+static int dmxp = ~0, dmyp = ~0, dmwp = ~0; /* percentage values for the above */
 static int inputw = 0, promptw;
 static int lrpad; /* sum of left and right padding */
 static size_t cursor;
@@ -799,6 +799,7 @@ static void
 setup(void)
 {
 	int x, y, i, j;
+	int xoffset = 0, yoffset = 0, height = 0, width = 0;
 	unsigned int du;
 	XSetWindowAttributes swa;
 	XIM xim;
@@ -826,6 +827,7 @@ setup(void)
 	lines = MAX(lines, 0);
 	mh = (lines + 1) * bh;
 	promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
+
 #ifdef XINERAMA
 	i = 0;
 	if (parentwin == root && (info = XineramaQueryScreens(dpy, &n))) {
@@ -852,15 +854,11 @@ setup(void)
 				if (INTERSECT(x, y, 1, 1, info[i]) != 0)
 					break;
 
-		if (enabled(Centered)) {
-			mw = MIN(MAX(max_textw() + promptw, dmw ? dmw : min_width), info[i].width) - border_width * 2;
-			x = info[i].x_org + ((info[i].width  - mw) / 2);
-			y = info[i].y_org + ((info[i].height - mh) / 2);
-		} else {
-			x = info[i].x_org + dmx;
-			y = info[i].y_org + (enabled(TopBar) ? dmy : info[i].height - mh - dmy);
-			mw = (dmw ? dmw : info[i].width - sidepad * 2) - border_width * 2;
-		}
+		xoffset = info[i].x_org;
+		yoffset = info[i].y_org;
+		width = info[i].width;
+		height = info[i].height;
+
 		XFree(info);
 	} else
 #endif
@@ -868,16 +866,40 @@ setup(void)
 		if (!XGetWindowAttributes(dpy, parentwin, &wa))
 			die("could not get embedding window attributes: 0x%lx",
 			    parentwin);
-		if (enabled(Centered)) {
-			mw = MIN(MAX(max_textw() + promptw, dmw ? dmw : min_width), wa.width);
-			x = (wa.width  - mw) / 2;
-			y = (wa.height - mh) / 2;
-		} else {
-			x = dmx;
-			y = enabled(TopBar) ? dmy : wa.height - mh - dmy;
-			mw = (dmw ? dmw : wa.width);
-		}
+
+		width = wa.width;
+		height = wa.height;
 	}
+
+	if (enabled(Centered)) {
+		dmxp = 50;
+		dmyp = 50;
+		if (dmw <= 0 && dmwp == ~0)
+			dmw = min_width + dmw;
+	}
+
+	if (dmw <= 0)
+		dmw = width - sidepad * 2 + dmw; // dmw can be a negative adjustment
+	if (dmwp != ~0)
+		dmw = dmw * dmwp / 100;
+
+	if (dmxp != ~0)
+		dmx = sidepad + (width - dmw - sidepad * 2) * dmxp / 100;
+	else if (dmx == ~0)
+		dmx = sidepad;
+
+	if (dmyp != ~0) {
+		dmy = vertpad + ((height - mh - vertpad * 2 - border_width * 2) * dmyp / 100);
+	} else if (dmy == ~0)
+		dmy = enabled(TopBar) ? vertpad : height - mh - vertpad - border_width * 2;
+
+	if (enabled(Centered))
+		dmw = MIN(MAX(max_textw() + promptw, dmw), width);
+
+	mw = dmw - border_width * 2;
+	x = xoffset + dmx;
+	y = yoffset + dmy;
+
 	inputw = MIN(inputw, mw/3);
 	match();
 
@@ -886,7 +908,7 @@ setup(void)
 	swa.background_pixel = 0;
 	swa.colormap = cmap;
 	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask | ButtonPressMask;
-	win = XCreateWindow(dpy, parentwin, x, y - (enabled(TopBar) ? 0 : border_width * 2), mw, mh, border_width,
+	win = XCreateWindow(dpy, parentwin, x, y, mw, mh, border_width,
 		depth, InputOutput, visual,
 		CWOverrideRedirect|CWBackPixel|CWBorderPixel|CWColormap|CWEventMask, &swa
 	);
@@ -1057,7 +1079,8 @@ int
 main(int argc, char *argv[])
 {
 	XWindowAttributes wa;
-	int i;
+	int i, val;
+	char ch;
 	int fast = 0;
 
 	enablefunc(functionality);
@@ -1113,14 +1136,43 @@ main(int argc, char *argv[])
 			enablefunc(Centered);
 			disablefunc(TopBar);
 		} else if arg("-x") { /* window x offset */
-			dmx = atoi(argv[++i]);
+			switch (sscanf(argv[++i], "%d%c", &val, &ch)) {
+				case 2:
+					if (ch == '%') {
+						dmxp = val;
+						break;
+					}
+					/* falls through */
+				case 1:
+					dmx = val;
+					break;
+			}
 			disablefunc(Centered);
 		} else if arg("-y") { /* window y offset (from bottom up if -b) */
-			dmy = atoi(argv[++i]);
+			switch (sscanf(argv[++i], "%d%c", &val, &ch)) {
+				case 2:
+					if (ch == '%') {
+						dmyp = val;
+						break;
+					}
+					/* falls through */
+				case 1:
+					dmy = val;
+					break;
+			}
 			disablefunc(Centered);
 		} else if (arg("-w") || arg("-z")) { /* make dmenu this wide, -z for compatibility reasons */
-			dmw = atoi(argv[++i]);
-
+			switch (sscanf(argv[++i], "%d%c", &val, &ch)) {
+				case 2:
+					if (ch == '%') {
+						dmwp = val;
+						break;
+					}
+					/* falls through */
+				case 1:
+					dmw = val;
+					break;
+			}
 		/* Functionality toggles */
 		} else if (arg("-CaseSensitive") || arg("-I")) { /* case-sensitive item matching */
 			fstrncmp = strncmp;
@@ -1285,10 +1337,6 @@ main(int argc, char *argv[])
 
 	if (lineheight == -1)
 		lineheight = drw->fonts->h * 2.5;
-	if (!dmx && !dmy) {
-		dmx = sidepad;
-		dmy = vertpad;
-	}
 
 #ifdef __OpenBSD__
 	if (pledge("stdio rpath", NULL) == -1)
