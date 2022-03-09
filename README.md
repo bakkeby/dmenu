@@ -1,7 +1,9 @@
 Please ignore. This is just my personal build of what was once dmenu.
 
 Refer to [https://tools.suckless.org/dmenu/](https://tools.suckless.org/dmenu/) for details on
-dmenu, how to install it and how it works.
+dmenu, how to install it and how it works. Alternatively you may want to refer to the
+[wiki](https://github.com/bakkeby/dmenu/wiki) for more information about this build and the
+various options.
 
 ---
 
