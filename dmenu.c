@@ -798,7 +798,7 @@ run(void)
 static void
 setup(void)
 {
-	int x, y, i, j;
+	int x, y, i, j, max_h, max_w;
 	int xoffset = 0, yoffset = 0, height = 0, width = 0;
 	unsigned int du;
 	XSetWindowAttributes swa;
@@ -820,13 +820,6 @@ setup(void)
 	utf8 = XInternAtom(dpy, "UTF8_STRING", False);
 	type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
 	dock = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", False);
-
-	/* calculate menu geometry */
-	bh = drw->fonts->h + 2;
-	bh = MAX(bh,lineheight);	/* make a menu line AT LEAST 'lineheight' tall */
-	lines = MAX(lines, 0);
-	mh = (lines + 1) * bh;
-	promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
 
 #ifdef XINERAMA
 	i = 0;
@@ -871,6 +864,19 @@ setup(void)
 		height = wa.height;
 	}
 
+	/* calculate menu geometry */
+	bh = MAX(drw->fonts->h + 2, lineheight);
+	lines = MAX(lines, 0);
+	mh = (lines + 1) * bh;
+	promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
+ 	max_h = height - vertpad * 2 - border_width * 2;
+ 	max_w = width - sidepad * 2;
+
+	if (mh > max_h) {
+		mh = max_h;
+		bh = max_h / (lines + 1);
+	}
+
 	if (enabled(Centered)) {
 		dmxp = 50;
 		dmyp = 50;
@@ -879,19 +885,19 @@ setup(void)
 	}
 
 	if (dmw <= 0)
-		dmw = width - sidepad * 2 + dmw; // dmw can be a negative adjustment
+		dmw = max_w + dmw; // dmw can be a negative adjustment
 	if (dmwp != ~0)
 		dmw = dmw * dmwp / 100;
 
 	if (dmxp != ~0)
-		dmx = sidepad + (width - dmw - sidepad * 2) * dmxp / 100;
+		dmx = sidepad + (max_w - dmw) * dmxp / 100;
 	else if (dmx == ~0)
 		dmx = sidepad;
 
 	if (dmyp != ~0) {
-		dmy = vertpad + ((height - mh - vertpad * 2 - border_width * 2) * dmyp / 100);
+		dmy = vertpad + (max_h - mh) * dmyp / 100;
 	} else if (dmy == ~0)
-		dmy = enabled(TopBar) ? vertpad : height - mh - vertpad - border_width * 2;
+		dmy = enabled(TopBar) ? vertpad : max_h - mh;
 
 	if (enabled(Centered))
 		dmw = MIN(MAX(max_textw() + promptw, dmw), width);
