@@ -1106,6 +1106,8 @@ main(int argc, char *argv[])
 		if arg("-v") { /* prints version information */
 			puts("dmenu-"VERSION);
 			exit(0);
+		} else if arg("--help") {
+			usage();
 		} else if arg("-Alpha") { /* enables transparency (alpha, opacity) */
 			enablefunc(Alpha);
 		} else if arg("-NoAlpha") { /* disables transparency (alpha, opacity) */
@@ -1114,15 +1116,26 @@ main(int argc, char *argv[])
 			enablefunc(Xresources);
 		} else if arg("-NoXresources") {
 			disablefunc(Xresources);
+		} else if (arg("-e") && i + 1 < argc) { /* embedding window id */
+			argv[i][0] = '\0';
+			embed = argv[++i];
 		} else
 			continue;
 		argv[i][0] = '\0'; // mark as used
 	}
 
+	/* Set up the X window */
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);
+	if (!embed || !(parentwin = strtol(embed, NULL, 0)))
+		parentwin = root;
+	if (!XGetWindowAttributes(dpy, parentwin, &wa))
+		die("could not get embedding window attributes: 0x%lx", parentwin);
 	xinitvisual();
 	drw = drw_create(dpy, screen, root, wa.width, wa.height, visual, depth, cmap);
+
+	/* X resources are loaded before the rest of the parameter are read. This is
+	 * to allow for command line arguments to override the X resource colours. */
 	if (enabled(Xresources))
 		readxresources();
 
@@ -1264,8 +1277,6 @@ main(int argc, char *argv[])
 			columns = atoi(argv[++i]);
 			if (columns && lines == 0)
 				lines = 1;
-		} else if arg("-e") { /* embedding window id */
-			embed = argv[++i];
 		} else if arg("-f") { /* grabs keyboard before reading stdin */
 			fast = 1;
 		} else if arg("-H") {
@@ -1330,11 +1341,6 @@ main(int argc, char *argv[])
 			usage();
 		}
 	}
-
-	if (!embed || !(parentwin = strtol(embed, NULL, 0)))
-		parentwin = root;
-	if (!XGetWindowAttributes(dpy, parentwin, &wa))
-		die("could not get embedding window attributes: 0x%lx", parentwin);
 
 	if (!drw_fontset_create(drw, (const char**)fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
