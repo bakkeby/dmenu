@@ -680,7 +680,7 @@ xinitvisual()
 
 	infos = XGetVisualInfo(dpy, masks, &tpl, &nitems);
 	visual = NULL;
-	for(i = 0; i < nitems; i ++) {
+	for (i = 0; i < nitems; i++) {
 		fmt = XRenderFindVisualFormat(dpy, infos[i].visual);
 		if (fmt->type == PictTypeDirect && fmt->direct.alphaMask) {
 			visual = infos[i].visual;
@@ -705,7 +705,7 @@ readstdin(void)
 {
 	char buf[sizeof text], *p;
 	size_t i, imax = 0, size = 0;
-	unsigned int tmpmax = 0;
+	XGlyphInfo ext;
 
 	if (enabled(PasswordInput)) {
 		inputw = lines = 0;
@@ -731,9 +731,9 @@ readstdin(void)
 		items[i].id = i; /* for multiselect */
 		items[i].index = i;
 		items[i].hp = arrayhas(hpitems, hplength, items[i].text);
-		drw_font_getexts(drw->fonts, buf, strlen(buf), &tmpmax, NULL);
-		if (tmpmax > inputw) {
-			inputw = tmpmax;
+		XftTextExtentsUtf8(drw->fonts->dpy, drw->fonts->xfont, (XftChar8 *)buf, strlen(buf), &ext);
+		if (ext.xOff > inputw) {
+			inputw = ext.xOff;
 			imax = i;
 		}
 	}

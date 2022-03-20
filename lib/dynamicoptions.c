@@ -27,7 +27,7 @@ readstream(FILE* stream)
 {
 	char buf[sizeof text], *p;
 	size_t i, imax = 0, size = 0;
-	unsigned int tmpmax = 0;
+	XGlyphInfo ext;
 
 	/* read each line from stdin and add it to the item list */
 	for (i = 0; fgets(buf, sizeof buf, stream); i++) {
@@ -46,9 +46,9 @@ readstream(FILE* stream)
 		}
 		items[i].id = i;
 		items[i].hp = arrayhas(hpitems, hplength, items[i].text);
-		drw_font_getexts(drw->fonts, buf, strlen(buf), &tmpmax, NULL);
-		if (tmpmax > inputw) {
-			inputw = tmpmax;
+		XftTextExtentsUtf8(drw->fonts->dpy, drw->fonts->xfont, (XftChar8 *)buf, strlen(buf), &ext);
+		if (ext.xOff > inputw) {
+			inputw = ext.xOff;
 			imax = i;
 		}
 	}
