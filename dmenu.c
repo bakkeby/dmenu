@@ -211,8 +211,7 @@ drawmenu(void)
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	if (enabled(PasswordInput)) {
 		censort = ecalloc(1, sizeof(text));
-		memset(censort, '.', strlen(text));
-		drw_text(drw, x, 0, w, bh, lrpad / 2, censort, 0);
+		memset(censort, csymbol, strlen(text));
 		drw_text(drw, x, 0, w, bh, lrpad / 2, censort, 0);
 		free(censort);
 	} else
@@ -245,10 +244,10 @@ drawmenu(void)
 	} else if (matches) {
 		/* draw horizontal list */
 		x += inputw;
-		w = TEXTW("<");
+		w = TEXTW(lsymbol);
 		if (curr->left) {
 			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_text(drw, x, 0, w, bh, lrpad / 2, "<", 0);
+			drw_text(drw, x, 0, w, bh, lrpad / 2, lsymbol, 0);
 		}
 		x += w;
 		for (item = curr; item != next; item = item->right) {

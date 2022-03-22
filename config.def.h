@@ -7,10 +7,11 @@ static char *fonts[] =
 	"monospace:size=10"
 };
 
-static char *prompt        = NULL;      /* -p  option; prompt to the left of input field */
-static const char *dynamic = NULL;      /* -dy option; dynamic command to run on input change */
-static const char *lsymbol = "<"; // shown when there are more items on the left
-static const char *rsymbol = ">"; // shown when there are more items on the right
+static char *prompt        = NULL; /* -p  option; prompt to the left of input field */
+static const char *dynamic = NULL; /* -dy option; dynamic command to run on input change */
+static const char *lsymbol = "<";  /* shown when there are more items on the left */
+static const char *rsymbol = ">";  /* shown when there are more items on the right */
+static const char csymbol = '*';   /* shown when password input is enabled */
 
 /* Functionality that is enabled by default, see util.h for options */
 static unsigned long functionality = 0
