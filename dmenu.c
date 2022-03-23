@@ -704,8 +704,7 @@ static void
 readstdin(void)
 {
 	char buf[sizeof text], *p;
-	size_t i, imax = 0, size = 0;
-	XGlyphInfo ext;
+	size_t i, size = 0;
 
 	if (enabled(PasswordInput)) {
 		inputw = lines = 0;
@@ -731,15 +730,9 @@ readstdin(void)
 		items[i].id = i; /* for multiselect */
 		items[i].index = i;
 		items[i].hp = arrayhas(hpitems, hplength, items[i].text);
-		XftTextExtentsUtf8(drw->fonts->dpy, drw->fonts->xfont, (XftChar8 *)buf, strlen(buf), &ext);
-		if (ext.xOff > inputw) {
-			inputw = ext.xOff;
-			imax = i;
-		}
 	}
 	if (items)
 		items[i].text = NULL;
-	inputw = items ? TEXTW(items[imax].text) : 0;
 	lines = MIN(lines, i);
 }
 
@@ -800,12 +793,13 @@ setup(void)
 {
 	int x, y, i, j, max_h, max_w;
 	int xoffset = 0, yoffset = 0, height = 0, width = 0;
-	unsigned int du;
+	unsigned int du, tmp;
 	XSetWindowAttributes swa;
 	XIM xim;
 	Window w, dw, *dws;
 	XWindowAttributes wa;
 	XClassHint ch = {"dmenu", "dmenu"};
+	struct item *item;
 #ifdef XINERAMA
 	XineramaScreenInfo *info;
 	Window pw;
@@ -906,7 +900,13 @@ setup(void)
 	x = xoffset + dmx;
 	y = yoffset + dmy;
 
-	inputw = MIN(inputw, mw/3);
+	for (item = items; item && item->text; ++item) {
+		if ((tmp = TEXTW_CLAMP(item->text, mw/3)) > inputw) {
+			inputw = tmp;
+			if (tmp == mw/3)
+				break;
+		}
+	}
 	match();
 
 	/* create menu window */
