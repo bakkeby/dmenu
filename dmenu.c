@@ -24,6 +24,7 @@
                              * MAX(0, MIN((y)+(h),(r).y_org+(r).height) - MAX((y),(r).y_org)))
 #define LENGTH(X)             (sizeof X / sizeof X[0])
 #define TEXTW(X)              (drw_fontset_getwidth(drw, (X)) + lrpad)
+#define TEXTW_CLAMP(X, N)     (MIN((drw_fontset_getwidth_clamp(drw, (X), (N)) + lrpad), (N)))
 #define OPAQUE 0xffU
 
 /* enums */
@@ -135,10 +136,10 @@ calcoffsets(void)
 		n = mw - (promptw + inputw + TEXTW(lsymbol) + TEXTW(rsymbol));
 	/* calculate which items will begin the next page and previous page */
 	for (i = 0, next = curr; next; next = next->right)
-		if ((i += (lines > 0) ? bh : MIN(TEXTW(next->text), n)) > n)
+		if ((i += (lines > 0) ? bh : TEXTW_CLAMP(next->text, n)) > n)
 			break;
 	for (i = 0, prev = curr; prev && prev->left; prev = prev->left)
-		if ((i += (lines > 0) ? bh : MIN(TEXTW(prev->left->text), n)) > n)
+		if ((i += (lines > 0) ? bh : TEXTW_CLAMP(prev->left->text, n)) > n)
 			break;
 }
 
@@ -251,9 +252,9 @@ drawmenu(void)
 		}
 		x += w;
 		for (item = curr; item != next; item = item->right) {
-			itw = TEXTW(enabled(TabSeparatedValues) ? item->stext : item->text);
 			stw = TEXTW(rsymbol);
-			x = drawitem(item, x, 0, MIN(itw, mw - x - stw - rpad));
+			itw = TEXTW_CLAMP(enabled(TabSeparatedValues) ? item->stext : item->text, mw - x - stw - rpad);
+			x = drawitem(item, x, 0, itw);
 		}
 		if (next) {
 			w = TEXTW(rsymbol);
