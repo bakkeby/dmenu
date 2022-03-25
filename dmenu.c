@@ -24,7 +24,6 @@
                              * MAX(0, MIN((y)+(h),(r).y_org+(r).height) - MAX((y),(r).y_org)))
 #define LENGTH(X)             (sizeof X / sizeof X[0])
 #define TEXTW(X)              (drw_fontset_getwidth(drw, (X)) + lrpad)
-#define TEXTW_CLAMP(X, N)     (MIN((drw_fontset_getwidth_clamp(drw, (X), (N)) + lrpad), (N)))
 #define OPAQUE 0xffU
 
 /* enums */
@@ -105,6 +104,7 @@ static void xinitvisual(void);
 static void readstdin(void);
 static void run(void);
 static void setup(void);
+static unsigned int textw_clamp(const char *str, unsigned int n);
 static void usage(void);
 
 #include "lib/include.c"
@@ -136,10 +136,10 @@ calcoffsets(void)
 		n = mw - (promptw + inputw + TEXTW(lsymbol) + TEXTW(rsymbol));
 	/* calculate which items will begin the next page and previous page */
 	for (i = 0, next = curr; next; next = next->right)
-		if ((i += (lines > 0) ? bh : TEXTW_CLAMP(next->text, n)) > n)
+		if ((i += (lines > 0) ? bh : textw_clamp(next->text, n)) > n)
 			break;
 	for (i = 0, prev = curr; prev && prev->left; prev = prev->left)
-		if ((i += (lines > 0) ? bh : TEXTW_CLAMP(prev->left->text, n)) > n)
+		if ((i += (lines > 0) ? bh : textw_clamp(prev->left->text, n)) > n)
 			break;
 }
 
@@ -253,7 +253,7 @@ drawmenu(void)
 		x += w;
 		for (item = curr; item != next; item = item->right) {
 			stw = TEXTW(rsymbol);
-			itw = TEXTW_CLAMP(enabled(TabSeparatedValues) ? item->stext : item->text, mw - x - stw - rpad);
+			itw = textw_clamp(enabled(TabSeparatedValues) ? item->stext : item->text, mw - x - stw - rpad);
 			x = drawitem(item, x, 0, itw);
 		}
 		if (next) {
@@ -901,7 +901,7 @@ setup(void)
 	y = yoffset + dmy;
 
 	for (item = items; item && item->text; ++item) {
-		if ((tmp = TEXTW_CLAMP(item->text, mw/3)) > inputw) {
+		if ((tmp = textw_clamp(item->text, mw/3)) > inputw) {
 			inputw = tmp;
 			if (tmp == mw/3)
 				break;
@@ -953,6 +953,13 @@ setup(void)
 	}
 	drw_resize(drw, mw, mh);
 	drawmenu();
+}
+
+static unsigned int
+textw_clamp(const char *str, unsigned int n)
+{
+	unsigned int w = drw_fontset_getwidth_clamp(drw, str, n) + lrpad;
+	return MIN(w, n);
 }
 
 static void
