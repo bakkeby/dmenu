@@ -278,7 +278,7 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lp
 	FcPattern *match;
 	XftResult result;
 	XGlyphInfo ext;
-	const char *ellipsis = "...";
+	const char *ellipsis = "…";
 
 	/* keep track of a couple codepoints for which we have no match. */
 	enum { nomatches_len = 64 };
@@ -352,9 +352,11 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lp
 			w -= ew;
 		}
 
-		if (render && overflow)
+		if (render && overflow && ellipsis_width <= w) {
+			ty = y + (h - drw->fonts->h) / 2 + drw->fonts->xfont->ascent;
 			XftDrawStringUtf8(d, &drw->scheme[invert ? ColBg : ColFg],
 			                  drw->fonts->xfont, ellipsis_x, ty, (XftChar8 *)ellipsis, 3);
+		}
 
 		if (!*text || overflow) {
 			break;
