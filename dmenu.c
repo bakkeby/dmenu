@@ -795,6 +795,7 @@ static void
 setup(void)
 {
 	int x, y, i, j, max_h, max_w;
+	int minstrlen = 0, curstrlen = 0;
 	int xoffset = 0, yoffset = 0, height = 0, width = 0;
 	unsigned int du, tmp;
 	XSetWindowAttributes swa;
@@ -904,6 +905,10 @@ setup(void)
 	y = yoffset + dmy;
 
 	for (item = items; item && item->text; ++item) {
+		curstrlen = strlen(item->text);
+		if (curstrlen <= minstrlen)
+			continue;
+		minstrlen = curstrlen;
 		if ((tmp = textw_clamp(item->text, mw/3)) > inputw) {
 			inputw = tmp;
 			if (tmp == mw/3)
