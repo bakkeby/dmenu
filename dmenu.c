@@ -125,7 +125,10 @@ appenditem(struct item *item, struct item **list, struct item **last)
 static void
 calcoffsets(void)
 {
-	int i, n;
+	int i, n, rpad = 0;
+
+    if (enabled(ShowNumbers))
+        rpad = TEXTW(numbers);
 
 	if (lines > 0)
 		if (columns)
@@ -133,7 +136,7 @@ calcoffsets(void)
 		else
 			n = lines * bh;
 	else
-		n = mw - (promptw + inputw + TEXTW(lsymbol) + TEXTW(rsymbol));
+		n = mw - (promptw + inputw + TEXTW(lsymbol) + TEXTW(rsymbol) + rpad);
 	/* calculate which items will begin the next page and previous page */
 	for (i = 0, next = curr; next; next = next->right)
 		if ((i += (lines > 0) ? bh : textw_clamp(next->text, n)) > n)
@@ -796,6 +799,7 @@ setup(void)
 {
 	int x, y, i, j, max_h, max_w;
 	int minstrlen = 0, curstrlen = 0;
+	int numwidthchecks = 100;
 	int xoffset = 0, yoffset = 0, height = 0, width = 0;
 	unsigned int du, tmp;
 	XSetWindowAttributes swa;
@@ -904,15 +908,16 @@ setup(void)
 	x = xoffset + dmx;
 	y = yoffset + dmy;
 
-	for (item = items; item && item->text; ++item) {
+	for (item = items; !lines && item && item->text; ++item) {
 		curstrlen = strlen(item->text);
-		if (curstrlen <= minstrlen)
-			continue;
-		minstrlen = curstrlen;
-		if ((tmp = textw_clamp(item->text, mw/3)) > inputw) {
-			inputw = tmp;
-			if (tmp == mw/3)
-				break;
+		if (numwidthchecks || minstrlen < curstrlen) {
+			numwidthchecks = MAX(numwidthchecks - 1, 0);
+			minstrlen = MAX(minstrlen, curstrlen);
+			if ((tmp = textw_clamp(item->text, mw/3)) > inputw) {
+				inputw = tmp;
+				if (tmp == mw/3)
+					break;
+			}
 		}
 	}
 	match();
