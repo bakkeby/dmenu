@@ -127,8 +127,8 @@ calcoffsets(void)
 {
 	int i, n, rpad = 0;
 
-    if (enabled(ShowNumbers))
-        rpad = TEXTW(numbers);
+	if (enabled(ShowNumbers))
+		rpad = TEXTW(numbers);
 
 	if (lines > 0)
 		if (columns)
