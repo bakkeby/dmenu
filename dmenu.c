@@ -204,6 +204,11 @@ drawmenu(void)
 	int x = 0, y = 0, w, rpad = 0, itw = 0, stw = 0;
 	int fh = drw->fonts->h;
 	char *censort;
+	int hasfocus, revertwin;
+	Window focuswin;
+
+	XGetInputFocus(dpy, &focuswin, &revertwin);
+	hasfocus = enabled(Managed) ? focuswin == win : 1;
 
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	drw_rect(drw, 0, 0, mw, mh, 1, 1);
@@ -225,7 +230,7 @@ drawmenu(void)
 		drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
 
 	curpos = TEXTW(text) - TEXTW(&text[cursor]);
-	if ((curpos += lrpad / 2 - 1) < w) {
+	if (hasfocus && (curpos += lrpad / 2 - 1) < w) {
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		drw_rect(drw, x + curpos, 2 + (bh-fh)/2, 2, fh - 4, 1, 0);
 	}
@@ -774,10 +779,19 @@ run(void)
 			if (ev.xexpose.count == 0)
 				drw_map(drw, win, 0, 0, mw, mh);
 			break;
+		case FocusOut:
+			if (enabled(Managed))
+				drawmenu();
+			break;
 		case FocusIn:
 			/* regrab focus from parent window */
-			if (ev.xfocus.window != win)
-				grabfocus();
+			if (ev.xfocus.window != win) {
+				if (enabled(Managed)) {
+					drawmenu();
+				} else {
+					grabfocus();
+				}
+			}
 			break;
 		case KeyPress:
 			keypress(&ev.xkey);
@@ -962,7 +976,8 @@ setup(void)
 				XSelectInput(dpy, dws[i], FocusChangeMask);
 			XFree(dws);
 		}
-		grabfocus();
+		if (disabled(Managed))
+			grabfocus();
 	}
 	drw_resize(drw, mw, mh);
 	drawmenu();
