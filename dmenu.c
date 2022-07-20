@@ -884,7 +884,7 @@ setup(void)
 	bh = MAX(drw->fonts->h + 2, lineheight);
 	lines = MAX(lines, 0);
 	mh = (lines + 1) * bh;
-	promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
+	promptw = (prompt && *prompt) ? TEXTW(prompt) : 0;
  	max_h = height - vertpad * 2 - border_width * 2;
  	max_w = width - sidepad * 2;
 
