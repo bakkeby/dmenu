@@ -6,7 +6,7 @@ readxresources(void)
 	XrmInitialize();
 	int s;
 	char resource[40];
-	char *pattern = "dmenu.%s%scolor";
+	char *pattern = "dmenu.%s.%s.color";
 
 	char* xrm;
 	if ((xrm = XResourceManagerString(drw->dpy))) {
