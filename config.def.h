@@ -33,7 +33,6 @@ static unsigned long functionality = 0
 //	|RestrictReturn // disables Shift-Return and Ctrl-Return to restrict dmenu to only output one item
 //	|ShowNumbers // makes dmenu display the number of matched and total items in the top right corner
 	|Sort // allow dmenu to sort menu items after matching
-	|TabSeparatedValues // makes dmenu hide values following a tab character
 	|TopBar // dmenu appears at the top of the screen
 	|Xresources // makes dmenu read X resources at startup
 ;

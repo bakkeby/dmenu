@@ -4,7 +4,7 @@ drawhighlights(struct item *item, int x, int y, int maxw)
 	int i, indent;
 	char *highlight;
 	char c;
-	char *itemtext = enabled(TabSeparatedValues) ? item->stext : item->text;
+	char *itemtext = item->text;
 
 	if (!(strlen(itemtext) && strlen(text)))
 		return;

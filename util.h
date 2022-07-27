@@ -23,7 +23,7 @@ static const unsigned long
 	PromptIndent = 0x800, // prevents dmenu from indenting items at the same level as the prompt on multi-line views
 	InstantReturn = 0x1000, // makes dmenu select an item immediately if there is only one matching option left
 	RestrictReturn = 0x2000, // disables Shift-Return and Ctrl-Return to restrict dmenu to only output one item
-	TabSeparatedValues = 0x4000, // makes dmenu hide values following a tab character
+	FuncPlaceholder0x4000 = 0x4000,
 	RejectNoMatch = 0x8000, // makes dmenu reject input if it would result in no matching item
 	Incremental = 0x10000, // makes dmenu print out the current text each time a key is pressed
 	HighlightAdjacent = 0x20000, // makes dmenu highlight items adjacent to the selected item

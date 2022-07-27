@@ -15,13 +15,13 @@ printsel(unsigned int state)
 			if (enabled(PrintIndex))
 				printf("%d\n", selid[i]);
 			else
-				puts(items[selid[i]].text);
+				puts(items[selid[i]].text_output);
 		}
 	if (sel && !(state & ShiftMask)) {
 		if (enabled(PrintIndex))
 			printf("%d\n", sel->index);
 		else
-			puts(sel->text);
+			puts(sel->text_output);
 	} else
 		puts(text);
 }

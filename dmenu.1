@@ -6,6 +6,10 @@ dmenu \- dynamic menu
 .RB [ \-bcfiIjJkKnNrRsStuUvxyz ]
 .RB [ \-bw
 .IR width ]
+.RB [ \-d
+.IR delimiter ]
+.RB [ \-D
+.IR delimiter ]
 .RB [ \-g
 .IR columns ]
 .RB [ \-l
@@ -193,6 +197,14 @@ For color settings #RGB, #RRGGBB, and X color names are supported.
 
 .SH FUNCTIONALITY
 .TP
+.BI \-d " delimiter"
+separate the input into two halves on the first occurrence of the given charcter.
+Display only the first half in dmenu and print the second half to stdout upon selection.
+Appending '|' to the separator reverses the display/printing order.
+.TP
+.BI \-D " delimiter"
+same as \-d but separate based on the last occurrence of the delimiter.
+.TP
 .BI \-dy " command"
 a command used to dynamically change the dmenu options.
 .TP
@@ -322,12 +334,6 @@ makes dmenu display the number of matched and total items in the top right corne
 .TP
 .B \-NoShowNumbers
 dmenu will not show item count.
-.TP
-.B \-TabSeparatedValues
-makes dmenu hide values following a tab character.
-.TP
-.B \-NoTabSeparatedValues
-dmenu will not split items containing tabs.
 .TP
 .B \-Xresources
 makes dmenu read X resources at startup.

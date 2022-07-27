@@ -42,7 +42,7 @@ enum {
 
 struct item {
 	char *text;
-	char *stext;
+	char *text_output;
 	struct item *left, *right;
 	int id; /* for multiselect */
 	int hp;
@@ -52,6 +52,9 @@ struct item {
 
 static char text[BUFSIZ] = "";
 static char *embed;
+static char separator;
+static int separator_greedy;
+static int separator_reverse;
 static int bh, mw, mh;
 static int dmx = ~0, dmy = ~0, dmw = 0; /* put dmenu at these x and y offsets and w width */
 static int dmxp = ~0, dmyp = ~0, dmwp = ~0; /* percentage values for the above */
@@ -178,7 +181,7 @@ static int
 drawitem(struct item *item, int x, int y, int w)
 {
 	int r;
-	char *text = enabled(TabSeparatedValues) ? item->stext : item->text;
+	char *text = item->text;
 
 	if (item == sel)
 		drw_setscheme(drw, scheme[SchemeSel]);
@@ -264,7 +267,7 @@ drawmenu(void)
 		x += w;
 		for (item = curr; item != next; item = item->right) {
 			stw = TEXTW(rsymbol);
-			itw = textw_clamp(enabled(TabSeparatedValues) ? item->stext : item->text, mw - x - stw - rpad);
+			itw = textw_clamp(item->text, mw - x - stw - rpad);
 			x = drawitem(item, x, 0, itw);
 		}
 		if (next) {
@@ -731,11 +734,17 @@ readstdin(void)
 			*p = '\0';
 		if (!(items[i].text = strdup(buf)))
 			die("cannot strdup %u bytes:", strlen(buf) + 1);
-		if (enabled(TabSeparatedValues)) {
-			if ((p = strchr(buf, '\t')))
-				*p = '\0';
-			if (!(items[i].stext = strdup(buf)))
-				die("cannot strdup %u bytes:", strlen(buf) + 1);
+		if (separator && (p = separator_greedy ?
+			strrchr(items[i].text, separator) : strchr(items[i].text, separator))) {
+			*p = '\0';
+			items[i].text_output = ++p;
+		} else {
+			items[i].text_output = items[i].text;
+		}
+		if (separator_reverse) {
+			p = items[i].text;
+			items[i].text = items[i].text_output;
+			items[i].text_output = p;
 		}
 
 		items[i].id = i; /* for multiselect */
@@ -1062,6 +1071,8 @@ usage(void)
 	fprintf(stderr, "\nFor color settings #RGB, #RRGGBB, and X color names are supported.\n");
 
 	fprintf(stderr, "\nFunctionality:\n");
+	fprintf(stderr, ofmt, "-d <delimiter>", "separates the input in two halves; print first and return second", "");
+	fprintf(stderr, ofmt, "-D <delimiter>", "as -d but based on the last occurrence of the delimiter", "");
 	fprintf(stderr, ofmt, "-dy <command>", "a command used to dynamically change the dmenu options", "");
 	fprintf(stderr, ofmt, "-hp <items>", "comma separated list of high priority items", "");
 	fprintf(stderr, ofmt, "-it <text>", "starts dmenu with initial text already typed in", "");
@@ -1105,8 +1116,6 @@ usage(void)
 	fprintf(stderr, ofmt, "    -NoPromptIndent", "items on multi-line views are not indented", disabled(PromptIndent) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -ShowNumbers", "makes dmenu display the number of matched and total items in the top right corner", enabled(ShowNumbers) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -NoShowNumbers", "dmenu will not show item count", disabled(ShowNumbers) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -TabSeparatedValues", "makes dmenu hide values following a tab character", enabled(TabSeparatedValues) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoTabSeparatedValues", "dmenu will not split items containing tabs", disabled(TabSeparatedValues) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -Xresources", "makes dmenu read X resources at startup", enabled(Xresources) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -NoXresources", "dmenu will not read X resources", disabled(Xresources) ? " (default)" : "");
 
@@ -1294,10 +1303,6 @@ main(int argc, char *argv[])
 			enablefunc(ShowNumbers);
 		} else if arg("-NoShowNumbers") {
 			disablefunc(ShowNumbers);
-		} else if arg("-TabSeparatedValues") {
-			enablefunc(TabSeparatedValues);
-		} else if arg("-NoTabSeparatedValues") {
-			disablefunc(TabSeparatedValues);
 
 		/* These options take one argument */
 		} else if (i + 1 == argc) {
@@ -1306,6 +1311,14 @@ main(int argc, char *argv[])
 			mon = atoi(argv[++i]);
 		} else if arg("-bw") { /* border width around dmenu */
 			border_width = atoi(argv[++i]);
+		} else if arg("-d") {
+			separator_greedy = 0;
+			separator = argv[++i][0];
+			separator_reverse = argv[i][1] == '|';
+		} else if arg("-D") {
+			separator_greedy = 1;
+			separator = argv[++i][0];
+			separator_reverse = argv[i][1] == '|';
 		} else if arg("-l") { /* number of lines in vertical list */
 			lines = atoi(argv[++i]);
 		} else if arg("-g") {   /* number of columns in grid */
