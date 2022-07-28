@@ -12,6 +12,10 @@ various options.
    - [alpha](https://github.com/bakkeby/patches/blob/master/dmenu/dmenu-alpha-5.0_20210725_523aa08.diff)
       - adds transparency for the dmenu window
 
+   - [barpadding](https://github.com/bakkeby/patches/wiki/barpadding)
+      - adds padding between the dmenu window and the edge of the screen
+      - intended to be used in combination with the barpadding patch for dwm
+
    - [border](http://tools.suckless.org/dmenu/patches/border/)
       - adds a border around the dmenu window
 
@@ -125,14 +129,18 @@ various options.
       - adds an option that disables Shift-Return and Ctrl-Return
       - this guarantees that dmenu will only output one item, and that item was read from stdin
 
+   - [separator](https://tools.suckless.org/dmenu/patches/separator/)
+      - separates the input in two halves based on a delimiter where one half is displayed in dmenu
+        while the other is returned / printed to standard out when selected
+
    - [symbols](https://tools.suckless.org/dmenu/patches/symbols/)
       - allows the symbols, which are printed in dmenu to indicate that either the input is too
         long or there are too many options to be shown in dmenu in one line, to be defined
 
-   - [tsv](https://tools.suckless.org/dmenu/patches/tsv/)
-      - makes dmenu split input lines at first tab character and only display first part, but it
-        will perform matching on and output full lines as usual
-      - can be useful if you want to separate data and representation
+   - [~tsv~](https://tools.suckless.org/dmenu/patches/tsv/)
+      - ~makes dmenu split input lines at first tab character and only display first part, but it~
+        ~will perform matching on and output full lines as usual~
+      - ~can be useful if you want to separate data and representation~
 
    - [vertfull](https://tools.suckless.org/dmenu/patches/vertfull/)
       - prevents dmenu from indenting items at the same level as the prompt length
