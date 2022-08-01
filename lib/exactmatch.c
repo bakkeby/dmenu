@@ -6,6 +6,7 @@ exactmatch(void)
 
 	char buf[sizeof text], *s;
 	int i, tokc = 0;
+	int sort = enabled(Sort);
 	size_t len, textsize;
 	struct item *item, *lprefix, *lsubstr, *prefixend, *substrend;
 	struct item *lhpprefix, *hpprefixend;
@@ -28,7 +29,7 @@ exactmatch(void)
 		if (i != tokc && !(dynamic && *dynamic)) /* not all tokens match */
 			continue;
 		/* exact matches go first, then prefixes with high priority, then prefixes, then substrings */
- 		if (!tokc || disabled(Sort) || !fstrncmp(text, item->text, textsize))
+		if (!tokc || !sort || !fstrncmp(text, item->text, textsize))
 			appenditem(item, &matches, &matchend);
 		else if (item->hp && !fstrncmp(tokv[0], item->text, len))
 			appenditem(item, &lhpprefix, &hpprefixend);

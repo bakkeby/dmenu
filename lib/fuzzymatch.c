@@ -20,13 +20,16 @@ fuzzymatch(void)
 	/* bang - we have so much memory */
 	struct item *it;
 	struct item **fuzzymatches = NULL;
-	struct item *lhpprefix, *hpprefixend;
+	struct item *lhpprefix, *hpprefixend, *exact_matches, *exact_matchend;
 	char c;
 	int number_of_matches = 0, i, pidx, sidx, eidx;
 	int text_len = strlen(text), itext_len;
+	int sort = enabled(Sort);
 	lhpprefix = hpprefixend = NULL;
+	exact_matches = exact_matchend = NULL;
 
 	matches = matchend = NULL;
+
 
 	/* walk through all items */
 	for (it = items; it && it->text; it++) {
@@ -70,22 +73,29 @@ fuzzymatch(void)
 			fuzzymatches[i] = it;
 		}
 		/* sort matches according to distance */
-		if (enabled(Sort))
+		if (sort)
 			qsort(fuzzymatches, number_of_matches, sizeof(struct item*), compare_distance);
 		/* rebuild list of matches */
 		matches = matchend = NULL;
 		for (i = 0, it = fuzzymatches[i];  i < number_of_matches && it && \
 				it->text; i++, it = fuzzymatches[i]) {
-			if (enabled(Sort) && it->hp)
+			if (sort && !strcmp(text, it->text))
+				appenditem(it, &exact_matches, &exact_matchend);
+			else if (sort && it->hp)
 				appenditem(it, &lhpprefix, &hpprefixend);
 			else
 				appenditem(it, &matches, &matchend);
 		}
 		free(fuzzymatches);
-	}
-	if (lhpprefix) {
-		hpprefixend->right = matches;
-		matches = lhpprefix;
+
+		if (lhpprefix) {
+			hpprefixend->right = matches;
+			matches = lhpprefix;
+		}
+		if (exact_matches) {
+			exact_matchend->right = matches;
+			matches = exact_matches;
+		}
 	}
 	curr = sel = matches;
 
