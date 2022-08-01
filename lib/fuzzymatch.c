@@ -90,10 +90,12 @@ fuzzymatch(void)
 
 		if (lhpprefix) {
 			hpprefixend->right = matches;
+			matches->left = hpprefixend;
 			matches = lhpprefix;
 		}
 		if (exact_matches) {
 			exact_matchend->right = matches;
+			matches->left = exact_matchend;
 			matches = exact_matches;
 		}
 	}
