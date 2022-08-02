@@ -27,7 +27,6 @@ fuzzymatch(void)
 	int sort = enabled(Sort);
 	lhpprefix = hpprefixend = NULL;
 	exact_matches = exact_matchend = NULL;
-
 	matches = matchend = NULL;
 
 
@@ -89,14 +88,25 @@ fuzzymatch(void)
 		free(fuzzymatches);
 
 		if (lhpprefix) {
-			hpprefixend->right = matches;
-			matches->left = hpprefixend;
-			matches = lhpprefix;
+			if (matches) {
+				hpprefixend->right = matches;
+				matches->left = hpprefixend;
+				matches = lhpprefix;
+			} else {
+				matches = lhpprefix;
+				matchend = hpprefixend;
+			}
+
 		}
 		if (exact_matches) {
-			exact_matchend->right = matches;
-			matches->left = exact_matchend;
-			matches = exact_matches;
+			if (matches) {
+				exact_matchend->right = matches;
+				matches->left = exact_matchend;
+				matches = exact_matches;
+			} else {
+				matches = exact_matches;
+				matchend = exact_matchend;
+			}
 		}
 	}
 	curr = sel = matches;
