@@ -78,7 +78,7 @@ fuzzymatch(void)
 		matches = matchend = NULL;
 		for (i = 0, it = fuzzymatches[i];  i < number_of_matches && it && \
 				it->text; i++, it = fuzzymatches[i]) {
-			if (sort && !strcmp(text, it->text))
+			if (sort && !fstrcmp(text, it->text))
 				appenditem(it, &exact_matches, &exact_matchend);
 			else if (sort && it->hp)
 				appenditem(it, &lhpprefix, &hpprefixend);

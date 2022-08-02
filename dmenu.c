@@ -87,6 +87,7 @@ static Clr *scheme[SchemeLast];
 #include "config.h"
 
 static int (*fstrncmp)(const char *, const char *, size_t) = strncmp;
+static int (*fstrcmp)(const char *, const char *) = strcmp;
 static char *(*fstrstr)(const char *, const char *) = strstr;
 
 static void appenditem(struct item *item, struct item **list, struct item **last);
@@ -1137,6 +1138,7 @@ main(int argc, char *argv[])
 
 	if (disabled(CaseSensitive)) {
 		fstrncmp = strncasecmp;
+		fstrcmp = strcasecmp;
 		fstrstr = cistrstr;
 	}
 
@@ -1239,9 +1241,11 @@ main(int argc, char *argv[])
 		/* Functionality toggles */
 		} else if (arg("-CaseSensitive") || arg("-I")) { /* case-sensitive item matching */
 			fstrncmp = strncmp;
+			fstrcmp = strcmp;
 			fstrstr = strstr;
 		} else if (arg("-NoCaseSensitive") || arg("-i")) { /* case-insensitive item matching */
 			fstrncmp = strncasecmp;
+			fstrcmp = strcasecmp;
 			fstrstr = cistrstr;
 		} else if (arg("-InstantReturn") || arg("-n")) { /* instant select only match */
 			enablefunc(InstantReturn);
