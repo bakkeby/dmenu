@@ -51,7 +51,7 @@ struct item {
 };
 
 static char text[BUFSIZ] = "";
-static char *embed;
+static long embed = 0;
 static char separator;
 static int separator_greedy;
 static int separator_reverse;
@@ -104,6 +104,8 @@ static size_t nextrune(int inc);
 static void movewordedge(int dir);
 static void keypress(XKeyEvent *ev);
 static void paste(void);
+static int xerror(Display *dpy, XErrorEvent *ee);
+static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static void xinitvisual(void);
 static void readstdin(void);
 static void run(void);
@@ -678,6 +680,18 @@ paste(void)
 	drawmenu();
 }
 
+int
+xerror(Display *dpy, XErrorEvent *ee)
+{
+	return 1;
+}
+
+int
+xerrordummy(Display *dpy, XErrorEvent *ee)
+{
+    return 0;
+}
+
 static void
 xinitvisual()
 {
@@ -1164,7 +1178,7 @@ main(int argc, char *argv[])
 			disablefunc(Xresources);
 		} else if (arg("-e") && i + 1 < argc) { /* embedding window id */
 			argv[i][0] = '\0';
-			embed = argv[++i];
+			embed = strtol(argv[++i], NULL, 0);
 		} else
 			continue;
 		argv[i][0] = '\0'; // mark as used
@@ -1173,10 +1187,11 @@ main(int argc, char *argv[])
 	/* Set up the X window */
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);
-	if (!embed || !(parentwin = strtol(embed, NULL, 0)))
-		parentwin = root;
+	parentwin = embed ? embed : root;
+	XSetErrorHandler(xerrordummy);
 	if (!XGetWindowAttributes(dpy, parentwin, &wa))
 		die("could not get embedding window attributes: 0x%lx", parentwin);
+	XSetErrorHandler(xerror);
 	xinitvisual();
 	drw = drw_create(dpy, screen, root, wa.width, wa.height, visual, depth, cmap);
 
