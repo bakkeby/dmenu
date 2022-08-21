@@ -551,7 +551,7 @@ insert:
 				if (!tmpsel->left ||  tmpsel->left->right != tmpsel)
 					return;
 				if (tmpsel == curr)
-					offscreen = 0;
+					offscreen = 1;
 				tmpsel = tmpsel->left;
 			}
 			sel = tmpsel;
