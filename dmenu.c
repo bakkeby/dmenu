@@ -52,9 +52,8 @@ struct item {
 
 static char text[BUFSIZ] = "";
 static long embed = 0;
-static char separator;
-static int separator_greedy;
-static int separator_reverse;
+static char separator, separator_reverse;
+static char * (*sepchr)(const char *, int);
 static int bh, mw, mh;
 static int dmx = ~0, dmy = ~0, dmw = 0; /* put dmenu at these x and y offsets and w width */
 static int dmxp = ~0, dmyp = ~0, dmwp = ~0; /* percentage values for the above */
@@ -160,6 +159,9 @@ cleanup(void)
 	XUngrabKey(dpy, AnyKey, AnyModifier, root);
 	for (i = 0; i < SchemeLast; i++)
 		free(scheme[i]);
+	for (i = 0; items && items[i].text; ++i)
+		free(separator_reverse ? items[i].text_output : items[i].text);
+	free(items);
 	for (i = 0; i < hplength; ++i)
 		free(hpitems[i]);
 	free(hpitems);
@@ -749,8 +751,7 @@ readstdin(void)
 			*p = '\0';
 		if (!(items[i].text = strdup(buf)))
 			die("cannot strdup %u bytes:", strlen(buf) + 1);
-		if (separator && (p = separator_greedy ?
-			strrchr(items[i].text, separator) : strchr(items[i].text, separator))) {
+		if (separator && (p = sepchr(items[i].text, separator)) != NULL) {
 			*p = '\0';
 			items[i].text_output = ++p;
 		} else {
@@ -1331,11 +1332,11 @@ main(int argc, char *argv[])
 		} else if arg("-bw") { /* border width around dmenu */
 			border_width = atoi(argv[++i]);
 		} else if arg("-d") {
-			separator_greedy = 0;
+			sepchr = strchr;
 			separator = argv[++i][0];
 			separator_reverse = argv[i][1] == '|';
 		} else if arg("-D") {
-			separator_greedy = 1;
+			sepchr = strrchr;
 			separator = argv[++i][0];
 			separator_reverse = argv[i][1] == '|';
 		} else if arg("-l") { /* number of lines in vertical list */
