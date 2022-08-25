@@ -50,7 +50,11 @@ readstream(FILE* stream)
 			items[i].text_output = p;
 		}
 		items[i].id = i;
-		items[i].hp = arrayhas(hpitems, hplength, items[i].text);
+		p = hpitems == NULL ? NULL : bsearch(
+			&items[i].text, hpitems, hplength, sizeof *hpitems,
+			str_compare
+		);
+		items[i].hp = p != NULL;
 		XftTextExtentsUtf8(drw->fonts->dpy, drw->fonts->xfont, (XftChar8 *)buf, strlen(buf), &ext);
 		if (ext.xOff > inputw) {
 			inputw = ext.xOff;

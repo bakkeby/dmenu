@@ -162,8 +162,6 @@ cleanup(void)
 	for (i = 0; items && items[i].text; ++i)
 		free(separator_reverse ? items[i].text_output : items[i].text);
 	free(items);
-	for (i = 0; i < hplength; ++i)
-		free(hpitems[i]);
 	free(hpitems);
 	drw_free(drw);
 	XSync(dpy, False);
@@ -737,6 +735,9 @@ readstdin(void)
 	char buf[sizeof text], *p;
 	size_t i, size = 0;
 
+	if (hpitems && hplength > 0)
+		qsort(hpitems, hplength, sizeof *hpitems, str_compare);
+
 	if (enabled(PasswordInput)) {
 		inputw = lines = 0;
 		return;
@@ -765,7 +766,11 @@ readstdin(void)
 
 		items[i].id = i; /* for multiselect */
 		items[i].index = i;
-		items[i].hp = arrayhas(hpitems, hplength, items[i].text);
+		p = hpitems == NULL ? NULL : bsearch(
+			&items[i].text, hpitems, hplength, sizeof *hpitems,
+			str_compare
+		);
+		items[i].hp = p != NULL;
 	}
 	if (items)
 		items[i].text = NULL;
@@ -1361,7 +1366,7 @@ main(int argc, char *argv[])
 		} else if arg("-dy") { /* dynamic command to run */
 			dynamic = argv[++i];
 		} else if arg("-hp") { /* high priority items */
-			hpitems = tokenize(argv[++i], ",", &hplength);
+			parse_hpitems(argv[++i]);
 		} else if arg("-xpad") { /* sets horizontal padding */
 			sidepad = atoi(argv[++i]);
 		} else if arg("-ypad") { /* sets vertical padding */
