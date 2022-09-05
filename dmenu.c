@@ -732,8 +732,9 @@ xinitvisual()
 static void
 readstdin(void)
 {
-	char buf[sizeof text], *p;
-	size_t i, size = 0;
+	char *line = NULL, *p;
+	size_t i, junk, size = 0;
+	ssize_t len;
 
 	if (hpitems && hplength > 0)
 		qsort(hpitems, hplength, sizeof *hpitems, str_compare);
@@ -744,14 +745,13 @@ readstdin(void)
 	}
 
 	/* read each line from stdin and add it to the item list */
-	for (i = 0; fgets(buf, sizeof buf, stdin); i++)	{
+	for (i = 0; (len = getline(&line, &junk, stdin)) != -1; i++, line = NULL) {
 		if (i + 1 >= size / sizeof *items)
 			if (!(items = realloc(items, (size += BUFSIZ))))
 				die("cannot realloc %u bytes:", size);
-		if ((p = strchr(buf, '\n')))
-			*p = '\0';
-		if (!(items[i].text = strdup(buf)))
-			die("cannot strdup %u bytes:", strlen(buf) + 1);
+		if (line[len - 1] == '\n')
+			line[len - 1] = '\0';
+		items[i].text = line;
 		if (separator && (p = sepchr(items[i].text, separator)) != NULL) {
 			*p = '\0';
 			items[i].text_output = ++p;
