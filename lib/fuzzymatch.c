@@ -67,7 +67,7 @@ fuzzymatch(void)
 	if (number_of_matches) {
 		/* initialize array with matches */
 		if (!(fuzzymatches = realloc(fuzzymatches, number_of_matches * sizeof(struct item*))))
-			die("cannot realloc %u bytes:", number_of_matches * sizeof(struct item*));
+			die("cannot realloc %zu bytes:", number_of_matches * sizeof(struct item*));
 		for (i = 0, it = matches; it && i < number_of_matches; i++, it = it->right) {
 			fuzzymatches[i] = it;
 		}
