@@ -800,6 +800,9 @@ run(void)
 		case ButtonPress:
 			buttonpress(&ev);
 			break;
+		case MotionNotify:
+			motionevent(&ev.xbutton);
+			break;
 		case DestroyNotify:
 			if (ev.xdestroywindow.window != win)
 				break;
@@ -970,7 +973,7 @@ setup(void)
 	swa.override_redirect = enabled(Managed) ? False : True;
 	swa.background_pixel = 0;
 	swa.colormap = cmap;
-	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask | ButtonPressMask;
+	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask | ButtonPressMask | PointerMotionMask;
 	win = XCreateWindow(dpy, parentwin, x, y, mw, mh, border_width,
 		depth, InputOutput, visual,
 		CWOverrideRedirect|CWBackPixel|CWBorderPixel|CWColormap|CWEventMask, &swa

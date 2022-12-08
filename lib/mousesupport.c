@@ -13,7 +13,7 @@ buttonpress(XEvent *e)
 	if (ev->button == Button3)
 		exit(1);
 
-	if (prompt && *prompt)
+	if (prompt && *prompt && (!lines || enabled(PromptIndent)))
 		x += promptw;
 
 	/* input field */
@@ -127,6 +127,54 @@ buttonpress(XEvent *e)
 			calcoffsets();
 			drawmenu();
 			return;
+		}
+	}
+}
+
+static void
+motionevent(XButtonEvent *ev)
+{
+	struct item *item;
+	int x = 0, y = 0, w, i;
+	int cols = columns ? columns : 1;
+
+	if (ev->window != win || matches == 0)
+		return;
+
+	if (prompt && *prompt && (!lines || enabled(PromptIndent)))
+		x += promptw;
+
+	if (lines > 0) {
+		w = mw - x;
+		for (i = 0, item = curr; item != next; item = item->right, i++) {
+			if (
+				(ev->y >= y + ((i % lines) + 1) * bh) && // line y start
+				(ev->y <= y + ((i % lines) + 2) * bh) && // line y end
+				(ev->x >= x + ((i / lines) * (w / cols))) && // column x start
+				(ev->x <= x + ((i / lines + 1) * (w / cols))) // column x end
+			) {
+				sel = item;
+				if (sel) {
+					calcoffsets();
+					drawmenu();
+				}
+				return;
+			}
+		}
+	} else {
+		x += inputw;
+		w = TEXTW(lsymbol);
+		/* horizontal list */
+		for (item = curr; item != next; item = item->right) {
+			x += w;
+			w = MIN(TEXTW(item->text), mw - x - TEXTW(rsymbol));
+			if (ev->x >= x && ev->x < x + w) {
+				sel = item;
+				if (sel) {
+					calcoffsets();
+					drawmenu();
+				}
+			}
 		}
 	}
 }
