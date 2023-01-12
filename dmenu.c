@@ -599,7 +599,7 @@ insert:
 			if (enabled(PrintIndex))
 				printf("%d\n", (sel && !(ev->state & ShiftMask)) ? sel->index : -1);
 			else
-				puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
+				puts((sel && !(ev->state & ShiftMask)) ? sel->text_output : text);
 		}
 		if (!(ev->state & ControlMask)) {
 			savehistory((sel && !(ev->state & ShiftMask))
