@@ -49,7 +49,7 @@ loadhistory(void)
 }
 
 static void
-navhistory(int dir)
+navhistory(const Arg *arg)
 {
 	static char def[BUFSIZ];
 	char *p = NULL;
@@ -62,7 +62,7 @@ navhistory(int dir)
 		strncpy(def, text, sizeof(def));
 	}
 
-	switch(dir) {
+	switch(arg->i) {
 	case 1:
 		if (histpos < histsz - 1) {
 			p = history[++histpos];

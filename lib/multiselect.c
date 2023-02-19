@@ -8,22 +8,36 @@ issel(size_t id)
 }
 
 static void
-printsel(unsigned int state)
+printsel()
 {
-	for (int i = 0; i < selidsize; i++)
+	for (int i = 0; i < selidsize; i++) {
 		if (selid[i] != -1 && (!sel || sel->id != selid[i])) {
 			if (enabled(PrintIndex))
 				printf("%d\n", selid[i]);
 			else
 				puts(items[selid[i]].text_output);
 		}
-	if (sel && !(state & ShiftMask)) {
-		if (enabled(PrintIndex))
-			printf("%d\n", sel->index);
-		else
-			puts(sel->text_output);
-	} else
-		puts(text);
+	}
+
+	if (enabled(PrintIndex))
+		printf("%d\n", sel->index);
+	else
+		puts(sel->text_output);
+
+}
+
+static void
+printinput()
+{
+	for (int i = 0; i < selidsize; i++) {
+		if (selid[i] != -1 && (!sel || sel->id != selid[i])) {
+			if (enabled(PrintIndex))
+				printf("%d\n", selid[i]);
+			else
+				puts(items[selid[i]].text_output);
+		}
+	}
+	puts(text);
 }
 
 static void

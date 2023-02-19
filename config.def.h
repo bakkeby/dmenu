@@ -77,3 +77,77 @@ static unsigned int border_width = 0;
 /* Vertical and horizontal padding of dmenu in relation to monitor border */
 static int vertpad = 0;
 static int sidepad = 0;
+
+#define Shift ShiftMask
+#define Ctrl ControlMask
+#define Alt Mod1Mask
+#define AltGr Mod3Mask
+#define Super Mod4Mask
+#define ShiftGr Mod5Mask
+
+static Key keys[] = {
+	/* modifier          key              function         argument  */
+	{ 0,                 XK_BackSpace,    backspace,       {0} },
+	{ Ctrl,              XK_h,            backspace,       {0} },
+	{ 0,                 XK_Tab,          complete,        {0} },
+	{ Ctrl,              XK_i,            complete,        {0} },
+	{ 0,                 XK_Delete,       delete,          {0} },
+	{ 0,                 XK_KP_Delete,    delete,          {0} },
+	{ Ctrl,              XK_d,            delete,          {0} },
+	{ Ctrl,              XK_u,            deleteleft,      {0} },
+	{ Ctrl,              XK_k,            deleteright,     {0} },
+	{ Ctrl,              XK_w,            deleteword,      {0} },
+	{ 0,                 XK_Home,         movestart,       {0} },
+	{ 0,                 XK_KP_Home,      movestart,       {0} },
+	{ Ctrl,              XK_a,            movestart,       {0} },
+	{ Alt,               XK_g,            movestart,       {0} },
+	{ 0,                 XK_End,          moveend,         {0} },
+	{ 0,                 XK_KP_End,       moveend,         {0} },
+	{ Ctrl,              XK_e,            moveend,         {0} },
+	{ Alt|Shift,         XK_g,            moveend,         {0} },
+	{ 0,                 XK_Next,         movenext,        {0} },
+	{ 0,                 XK_KP_Next,      movenext,        {0} },
+	{ Alt,               XK_j,            movenext,        {0} },
+	{ 0,                 XK_Prior,        moveprev,        {0} },
+	{ 0,                 XK_KP_Prior,     moveprev,        {0} },
+	{ Alt,               XK_k,            moveprev,        {0} },
+	{ 0,                 XK_Up,           moveup,          {0} },
+	{ 0,                 XK_KP_Up,        moveup,          {0} },
+	{ Alt,               XK_h,            moveup,          {0} },
+	{ Ctrl,              XK_p,            moveup,          {0} },
+	{ 0,                 XK_Down,         movedown,        {0} },
+	{ 0,                 XK_KP_Down,      movedown,        {0} },
+	{ Alt,               XK_l,            movedown,        {0} },
+	{ Ctrl,              XK_n,            movedown,        {0} },
+	{ 0,                 XK_Left,         moveleft,        {0} },
+	{ 0,                 XK_KP_Left,      moveleft,        {0} },
+	{ 0,                 XK_Right,        moveright,       {0} },
+	{ 0,                 XK_KP_Right,     moveright,       {0} },
+	{ Ctrl,              XK_Left,         movewordedge,    {-1} },
+	{ Ctrl,              XK_KP_Left,      movewordedge,    {-1} },
+	{ Ctrl,              XK_b,            movewordedge,    {-1} },
+	{ Alt,               XK_b,            movewordedge,    {-1} },
+	{ Ctrl,              XK_Right,        movewordedge,    {+1} },
+	{ Ctrl,              XK_KP_Right,     movewordedge,    {+1} },
+	{ Ctrl,              XK_f,            movewordedge,    {+1} },
+	{ Alt,               XK_f,            movewordedge,    {+1} },
+	{ Alt,               XK_p,            navhistory,      {.i = -1 } },
+	{ Alt,               XK_n,            navhistory,      {.i = +1 } },
+	{ Ctrl,              XK_y,            paste,           {1} }, /* primary buffer */
+	{ Ctrl,              XK_v,            paste,           {1} }, /* primary buffer */
+	{ Ctrl|Shift,        XK_y,            paste,           {0} }, /* clipboard */
+	{ Ctrl|Shift,        XK_v,            paste,           {0} }, /* clipboard */
+	{ 0,                 XK_Escape,       quit,            {0} },
+	{ Ctrl,              XK_c,            quit,            {0} },
+	{ Ctrl,              XK_g,            quit,            {0} },
+	{ Ctrl,              XK_bracketleft,  quit,            {0} },
+	{ 0,                 XK_Return,       selectandexit,   {0} },
+	{ 0,                 XK_KP_Enter,     selectandexit,   {0} },
+	{ Ctrl,              XK_j,            selectandexit,   {0} },
+	{ Ctrl|Shift,        XK_j,            selectandexit,   {0} },
+	{ Ctrl,              XK_m,            selectandexit,   {0} },
+	{ Ctrl,              XK_Return,       selectandresume, {0} },
+	{ Ctrl,              XK_KP_Enter,     selectandresume, {0} },
+	{ Shift,             XK_Return,       selectinput,     {0} },
+	{ Shift,             XK_KP_Enter,     selectinput,     {0} },
+};
