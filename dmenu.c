@@ -48,6 +48,8 @@ struct item {
 	struct item *left, *right;
 	int id; /* for multiselect */
 	int hp;
+	int scheme;
+	int x;
 	double distance;
 	int index;
 };
@@ -270,7 +272,6 @@ deleteword(const Arg *arg) {
 		insert(NULL, nextrune(-1) - cursor);
 }
 
-
 int
 drawitem(struct item *item, int x, int y, int w)
 {
@@ -278,16 +279,19 @@ drawitem(struct item *item, int x, int y, int w)
 	char *text = item->text;
 
 	if (item == sel)
-		drw_setscheme(drw, scheme[SchemeSel]);
+		item->scheme = SchemeSel;
 	else if (item->hp)
-		drw_setscheme(drw, scheme[SchemeHp]);
+		item->scheme = SchemeHp;
 	else if (enabled(HighlightAdjacent) && columns < 2 && (item->left == sel || item->right == sel))
-		drw_setscheme(drw, scheme[SchemeAdjacent]);
+		item->scheme = SchemeAdjacent;
 	else if (issel(item->id))
-		drw_setscheme(drw, scheme[SchemeOut]);
+		item->scheme = SchemeOut;
 	else
-		drw_setscheme(drw, scheme[SchemeNorm]);
+		item->scheme = SchemeNorm;
 
+	drw_setscheme(drw, scheme[item->scheme]);
+
+	item->x = x;
 	r = drw_text(drw, x, y, w, bh, lrpad / 2, text, 0);
 	drawhighlights(item, x, y, w);
 	return r;
@@ -297,9 +301,16 @@ void
 drawmenu(void)
 {
 	unsigned int curpos;
-	struct item *item;
-	int x = 0, y = 0, w, rpad = 0, itw = 0, stw = 0;
+	struct item *item, *p = NULL, *c = NULL;
+	int i, x = 0, y = 0, w, rpad = 0, itw = 0, stw = 0;
 	int fh = drw->fonts->h;
+
+	struct item **buffer;
+	buffer = calloc(lines, sizeof(struct item *));
+	for (i = 0; i < lines; i++) {
+		buffer[i] = NULL;
+	}
+
 	char *censort;
 	int hasfocus, revertwin;
 	Window focuswin;
@@ -339,7 +350,7 @@ drawmenu(void)
 	if (lines > 0) {
 		/* draw grid */
 		int i = 0, ix = (enabled(PromptIndent) ? x : 0);
-		for (item = curr; item != next; item = item->right, i++)
+		for (item = curr; item != next; item = item->right, i++) {
 			if (columns) {
 				drawitem(
 					item,
@@ -347,9 +358,16 @@ drawmenu(void)
 					y + (((i % lines) + 1) * bh),
 					(mw - ix) / columns
 				);
+				if (powerline) {
+					if (buffer[i % lines] != NULL) {
+						drw_arrow(drw, item->x - lrpad / 2, y + (((i % lines) + 1) * bh), lrpad, bh, powerline, scheme[buffer[i % lines]->scheme][ColBg], scheme[item->scheme][ColBg]);
+					}
+					buffer[i % lines] = item;
+				}
 			} else {
 				drawitem(item, ix, y += bh, mw - ix);
 			}
+		}
 	} else if (matches) {
 		/* draw horizontal list */
 		x += inputw;
@@ -363,6 +381,11 @@ drawmenu(void)
 			stw = TEXTW(rsymbol);
 			itw = textw_clamp(item->text, mw - x - stw - rpad);
 			x = drawitem(item, x, 0, itw);
+			p = c;
+			c = item;
+			if (powerline && p != NULL) {
+				drw_arrow(drw, c->x - lrpad / 2, 0, lrpad, bh, powerline, scheme[p->scheme][ColBg], scheme[c->scheme][ColBg]);
+			}
 		}
 		if (next) {
 			w = TEXTW(rsymbol);
@@ -375,6 +398,7 @@ drawmenu(void)
 		drw_text(drw, mw - TEXTW(numbers), 0, TEXTW(numbers), bh, lrpad / 2, numbers, 0);
 	}
 	drw_map(drw, win, 0, 0, mw, mh);
+	free(buffer);
 }
 
 void

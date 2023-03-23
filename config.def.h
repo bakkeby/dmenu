@@ -12,6 +12,9 @@ static const char *dynamic = NULL; /* -dy option; dynamic command to run on inpu
 static const char *lsymbol = "<";  /* shown when there are more items on the left */
 static const char *rsymbol = ">";  /* shown when there are more items on the right */
 static const char csymbol = '*';   /* shown when password input is enabled */
+/* Powerline options, one of:
+ *    PwrlNone, PwrlRightArrow, PwrlLeftArrow, PwrlForwardSlash or PwrlBackslash */
+static int powerline = PwrlForwardSlash;
 
 /* Functionality that is enabled by default, see util.h for options */
 static unsigned long functionality = 0

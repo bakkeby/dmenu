@@ -13,6 +13,7 @@ typedef struct Fnt {
 } Fnt;
 
 enum { ColFg, ColBg, ColResource, ColCount }; /* Clr scheme index */
+enum { PwrlNone, PwrlRightArrow, PwrlLeftArrow, PwrlForwardSlash, PwrlBackslash };
 typedef XftColor Clr;
 
 typedef struct {
@@ -53,6 +54,7 @@ void drw_setfontset(Drw *drw, Fnt *set);
 void drw_setscheme(Drw *drw, Clr *scm);
 
 /* Drawing functions */
+void drw_arrow(Drw *drw, int x, int y, unsigned int w, unsigned int h, int style, Clr prev, Clr next);
 void drw_rect(Drw *drw, int x, int y, unsigned int w, unsigned int h, int filled, int invert);
 int drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert);
 
