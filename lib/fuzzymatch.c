@@ -112,7 +112,7 @@ fuzzymatch(void)
 	curr = sel = matches;
 
 	if (enabled(InstantReturn) && matches && matches==matchend) {
-		puts(matches->text);
+		printsel();
 		cleanup();
 		exit(0);
 	}

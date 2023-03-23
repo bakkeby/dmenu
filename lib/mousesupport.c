@@ -72,7 +72,7 @@ buttonpress(XEvent *e)
 					sel = item;
 					selsel();
 					if (disabled(ContinuousOutput) && disabled(PrintIndex))
-						printsel(ev->state);
+						printsel();
 					exit(0);
 				}
 				sel = item;
@@ -108,7 +108,7 @@ buttonpress(XEvent *e)
 					sel = item;
 					selsel();
 					if (disabled(ContinuousOutput) && disabled(PrintIndex))
-						printsel(ev->state);
+						printsel();
 					exit(0);
 				}
 				sel = item;
