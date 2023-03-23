@@ -10,6 +10,7 @@ dmenu \- dynamic menu
 .IR delimiter ]
 .RB [ \-D
 .IR delimiter ]
+.RB [ \-dp ]
 .RB [ \-g
 .IR columns ]
 .RB [ \-l
@@ -204,6 +205,9 @@ Appending '|' to the separator reverses the display/printing order.
 .TP
 .BI \-D " delimiter"
 same as \-d but separate based on the last occurrence of the delimiter.
+.TP
+.B \-dp
+when using \-d or \-D\, display first and return original line (double print).
 .TP
 .BI \-dy " command"
 a command used to dynamically change the dmenu options.

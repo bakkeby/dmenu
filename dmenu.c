@@ -84,6 +84,7 @@ static int mon = -1, screen;
 static int *selid = NULL;
 static unsigned int selidsize = 0;
 static unsigned int preselected = 0;
+static unsigned int double_print = 0;
 
 static Atom clip, utf8;
 static Atom type, dock;
@@ -1176,8 +1177,9 @@ usage(void)
 	fprintf(stderr, "\nFor color settings #RGB, #RRGGBB, and X color names are supported.\n");
 
 	fprintf(stderr, "\nFunctionality:\n");
-	fprintf(stderr, ofmt, "-d <delimiter>", "separates the input in two halves; print first and return second", "");
+	fprintf(stderr, ofmt, "-d <delimiter>", "separates the input in two halves; display first and return second", "");
 	fprintf(stderr, ofmt, "-D <delimiter>", "as -d but based on the last occurrence of the delimiter", "");
+	fprintf(stderr, ofmt, "-dp", "when using -d or -D, display first and return original line (double print)", "");
 	fprintf(stderr, ofmt, "-dy <command>", "a command used to dynamically change the dmenu options", "");
 	fprintf(stderr, ofmt, "-hp <items>", "comma separated list of high priority items", "");
 	fprintf(stderr, ofmt, "-it <text>", "starts dmenu with initial text already typed in", "");
@@ -1434,6 +1436,8 @@ main(int argc, char *argv[])
 			columns = atoi(argv[++i]);
 			if (columns && lines == 0)
 				lines = 1;
+		} else if arg("-dp") { /* double print when using separator */
+			double_print = 1;
 		} else if arg("-f") { /* grabs keyboard before reading stdin */
 			fast = 1;
 		} else if arg("-H") {
