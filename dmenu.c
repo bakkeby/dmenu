@@ -724,19 +724,23 @@ selectandexit(const Arg *arg)
 {
 	if (enabled(RestrictReturn) && !sel)
 		return;
-
-	if (enabled(PrintInputText))
+	if (enabled(PrintInputText)) {
 		puts((sel && !cursor) ? sel->text : text);
-	else if (enabled(ContinuousOutput)) {
-		if (enabled(PrintIndex))
+	} else if (enabled(ContinuousOutput)) {
+		if (enabled(PrintIndex)) {
 			printf("%d\n", sel ? sel->index : -1);
-		else
+		} else {
 			puts(sel ? sel->text_output : text);
+		}
 	}
-
 	savehistory(sel ? sel->text : text);
-	if (disabled(ContinuousOutput) && disabled(PrintInputText))
-		printsel();
+	if (disabled(ContinuousOutput) && disabled(PrintInputText)) {
+		if (sel) {
+			printsel();
+		} else {
+			puts(text);
+		}
+	}
 	cleanup();
 	exit(0);
 }
