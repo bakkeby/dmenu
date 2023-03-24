@@ -1004,6 +1004,9 @@ setup(void)
 	if (dmwp != ~0)
 		dmw = dmw * dmwp / 100;
 
+	if (enabled(Centered))
+		dmw = MIN(MAX(max_textw() + promptw, dmw), max_w);
+
 	if (dmxp != ~0)
 		dmx = sidepad + (max_w - dmw) * dmxp / 100;
 	else if (dmx == ~0)
@@ -1013,9 +1016,6 @@ setup(void)
 		dmy = vertpad + (max_h - mh) * dmyp / 100;
 	} else if (dmy == ~0)
 		dmy = enabled(TopBar) ? vertpad : max_h - mh;
-
-	if (enabled(Centered))
-		dmw = MIN(MAX(max_textw() + promptw, dmw), width);
 
 	mw = dmw - border_width * 2;
 	x = xoffset + dmx;
