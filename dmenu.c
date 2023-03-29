@@ -301,7 +301,7 @@ void
 drawmenu(void)
 {
 	unsigned int curpos;
-	struct item *item, *p = NULL, *c = NULL;
+	struct item *item, *prev = NULL;
 	int i, x = 0, y = 0, w, rpad = 0, itw = 0, stw = 0;
 	int fh = drw->fonts->h;
 
@@ -358,9 +358,18 @@ drawmenu(void)
 					y + (((i % lines) + 1) * bh),
 					(mw - ix) / columns
 				);
-				if (powerline) {
+				if (powerline && powerline_size_reduction_pixels < lrpad / 2) {
 					if (buffer[i % lines] != NULL) {
-						drw_arrow(drw, item->x - lrpad / 2, y + (((i % lines) + 1) * bh), lrpad, bh, powerline, scheme[buffer[i % lines]->scheme][ColBg], scheme[item->scheme][ColBg]);
+						drw_arrow(
+							drw,
+							item->x - lrpad / 2 + powerline_size_reduction_pixels,
+							y + (((i % lines) + 1) * bh),
+							lrpad - 2 * powerline_size_reduction_pixels,
+							bh,
+							powerline,
+							scheme[buffer[i % lines]->scheme][ColBg],
+							scheme[item->scheme][ColBg]
+						);
 					}
 					buffer[i % lines] = item;
 				}
@@ -381,11 +390,19 @@ drawmenu(void)
 			stw = TEXTW(rsymbol);
 			itw = textw_clamp(item->text, mw - x - stw - rpad);
 			x = drawitem(item, x, 0, itw);
-			p = c;
-			c = item;
-			if (powerline && p != NULL) {
-				drw_arrow(drw, c->x - lrpad / 2, 0, lrpad, bh, powerline, scheme[p->scheme][ColBg], scheme[c->scheme][ColBg]);
+			if (powerline && prev != NULL && powerline_size_reduction_pixels < lrpad / 2) {
+				drw_arrow(
+					drw,
+					item->x - lrpad / 2 + powerline_size_reduction_pixels,
+					0,
+					lrpad - 2 * powerline_size_reduction_pixels,
+					bh,
+					powerline,
+					scheme[prev->scheme][ColBg],
+					scheme[item->scheme][ColBg]
+				);
 			}
+			prev = item;
 		}
 		if (next) {
 			w = TEXTW(rsymbol);

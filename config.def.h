@@ -12,9 +12,15 @@ static const char *dynamic = NULL; /* -dy option; dynamic command to run on inpu
 static const char *lsymbol = "<";  /* shown when there are more items on the left */
 static const char *rsymbol = ">";  /* shown when there are more items on the right */
 static const char csymbol = '*';   /* shown when password input is enabled */
+
 /* Powerline options, one of:
  *    PwrlNone, PwrlRightArrow, PwrlLeftArrow, PwrlForwardSlash or PwrlBackslash */
-static int powerline = PwrlForwardSlash;
+static int powerline = PwrlNone;
+/* By default the powerline separator will take up the full space between dmenu items.
+ * This option allows for the size to be reduced by a number of pixels, e.g. a value of 3
+ * will shave off three pixels on each side of the separator. This can be used to adjust
+ * the angle of a powerline slash or arrow. */
+static int powerline_size_reduction_pixels = 0;
 
 /* Functionality that is enabled by default, see util.h for options */
 static unsigned long functionality = 0
