@@ -13,7 +13,7 @@ typedef struct Fnt {
 } Fnt;
 
 enum { ColFg, ColBg, ColResource, ColCount }; /* Clr scheme index */
-enum { PwrlNone, PwrlRightArrow, PwrlLeftArrow, PwrlForwardSlash, PwrlBackslash };
+enum { PwrlNone, PwrlRightArrow, PwrlLeftArrow, PwrlForwardSlash, PwrlBackslash, PwrlLast };
 typedef XftColor Clr;
 
 typedef struct {

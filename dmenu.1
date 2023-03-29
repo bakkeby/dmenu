@@ -13,6 +13,10 @@ dmenu \- dynamic menu
 .RB [ \-dp ]
 .RB [ \-g
 .IR columns ]
+.RB [ \-pwrl
+.IR int ]
+.RB [ \-pwrl_reduction
+.IR pixels ]
 .RB [ \-l
 .IR lines ]
 .RB [ \-p
@@ -134,6 +138,12 @@ dmenu lists items vertically, with the given number of lines (rows).
 .TP
 .BI \-g " columns"
 dmenu lists items in a grid, with the given number of columns.
+.TP
+.BI \-pwrl " int"
+specifies the powerline separator to use (values 0 through 4).
+.TP
+.BI \-pwrl_reduction " pixels"
+adjusts the angle and size of the powerline separator.
 
 .SH COLORS
 .TP

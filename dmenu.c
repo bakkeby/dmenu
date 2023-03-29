@@ -358,7 +358,7 @@ drawmenu(void)
 					y + (((i % lines) + 1) * bh),
 					(mw - ix) / columns
 				);
-				if (powerline && powerline_size_reduction_pixels < lrpad / 2) {
+				if (powerline) {
 					if (buffer[i % lines] != NULL) {
 						drw_arrow(
 							drw,
@@ -390,7 +390,7 @@ drawmenu(void)
 			stw = TEXTW(rsymbol);
 			itw = textw_clamp(item->text, mw - x - stw - rpad);
 			x = drawitem(item, x, 0, itw);
-			if (powerline && prev != NULL && powerline_size_reduction_pixels < lrpad / 2) {
+			if (powerline && prev != NULL) {
 				drw_arrow(
 					drw,
 					item->x - lrpad / 2 + powerline_size_reduction_pixels,
@@ -1193,6 +1193,8 @@ usage(void)
 	fprintf(stderr, ofmt, "-p <text>, -prompt <text>", "defines the prompt to be displayed to the left of the input field", "");
 	fprintf(stderr, ofmt, "-l <lines>", "specifies the number of lines for grid presentation", "");
 	fprintf(stderr, ofmt, "-g <columns>", "specifies the number of columns for grid presentation", "");
+	fprintf(stderr, ofmt, "-pwrl <int>", "specifies the powerline separator to use (values 0 through 4)", "");
+	fprintf(stderr, ofmt, "-pwrl_reduction <pixels>", "adjusts the angle and size of the powerline separator", "");
 
 	fprintf(stderr, "\nColors:\n");
 	fprintf(stderr, ofmt, "-fn <font>", "defines the font or font set used", "");
@@ -1463,6 +1465,10 @@ main(int argc, char *argv[])
 			mon = atoi(argv[++i]);
 		} else if arg("-bw") { /* border width around dmenu */
 			border_width = atoi(argv[++i]);
+		} else if arg("-pwrl") { /* powerline separator between items */
+			powerline = atoi(argv[++i]);
+		} else if arg("-pwrl_reduction") { /* powerline separator between items */
+			powerline_size_reduction_pixels = atoi(argv[++i]);
 		} else if arg("-d") {
 			sepchr = strchr;
 			separator = argv[++i][0];
@@ -1551,6 +1557,9 @@ main(int argc, char *argv[])
 
 	if (lineheight == -1)
 		lineheight = drw->fonts->h * 2.5;
+
+	if (powerline < 0 || powerline >= PwrlLast || powerline_size_reduction_pixels >= lrpad / 2)
+		powerline = PwrlNone;
 
 #ifdef __OpenBSD__
 	if (pledge("stdio rpath", NULL) == -1)
