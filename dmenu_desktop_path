@@ -20,7 +20,6 @@ FILENAME != PREVFILENAME {
 	DESC=""
 	EXEC=""
 	ACTION=""
-	DO_PRINT=0
 	PREVFILENAME=FILENAME
 }
 
@@ -31,19 +30,16 @@ $1 == "Name" {
 	} else {
 		DESC=NAME " " $2;
 	}
-	DO_PRINT=(EXEC != "")
 }
 
 $1 == "Exec" {
 	EXEC=$2
-	DO_PRINT=(DESC != "")
 }
 
-DO_PRINT {
+EXEC != "" && DESC != "" {
 	print DESC "|" EXEC
  	EXEC=""
 	DESC=""
-	DO_PRINT=0
 }
 ' {} \+ | sort -i --ignore-case -t "|" -k1 -u | tee "$cache"
 else
