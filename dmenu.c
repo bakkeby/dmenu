@@ -840,7 +840,7 @@ void
 readstdin(void)
 {
 	char *line = NULL, *p;
-	size_t i, junk, itemsize = 0;
+	size_t i, linesize, itemsize = 0;
 	ssize_t len;
 
 	if (hpitems && hplength > 0)
@@ -852,7 +852,7 @@ readstdin(void)
 	}
 
 	/* read each line from stdin and add it to the item list */
-	for (i = 0; (len = getline(&line, &junk, stdin)) != -1; i++) {
+	for (i = 0; (len = getline(&line, &linesize, stdin)) != -1; i++) {
 		if (i + 1 >= itemsize) {
 			itemsize += 256;
 			if (!(items = realloc(items, itemsize * sizeof(*items))))
@@ -860,7 +860,8 @@ readstdin(void)
 		}
 		if (line[len - 1] == '\n')
 			line[len - 1] = '\0';
-		items[i].text = line;
+		if (!(items[i].text = strdup(line)))
+			die("strdup:");
 		if (separator && (p = sepchr(items[i].text, separator)) != NULL) {
 			*p = '\0';
 			items[i].text_output = ++p;
@@ -880,7 +881,6 @@ readstdin(void)
 			str_compare
 		);
 		items[i].hp = p != NULL;
-		line = NULL; /* next call of getline() allocates a new line */
 	}
 	free(line);
 	if (items)
