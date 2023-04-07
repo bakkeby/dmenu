@@ -852,7 +852,7 @@ readstdin(void)
 	}
 
 	/* read each line from stdin and add it to the item list */
-	for (i = 0; (len = getline(&line, &junk, stdin)) != -1; i++, line = NULL) {
+	for (i = 0; (len = getline(&line, &junk, stdin)) != -1; i++) {
 		if (i + 1 >= size / sizeof *items)
 			if (!(items = realloc(items, (size += BUFSIZ))))
 				die("cannot realloc %zu bytes:", size);
@@ -878,7 +878,9 @@ readstdin(void)
 			str_compare
 		);
 		items[i].hp = p != NULL;
+		line = NULL;
 	}
+	free(line);
 	if (items)
 		items[i].text = NULL;
 	lines = MIN(lines, i);
