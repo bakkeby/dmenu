@@ -878,7 +878,7 @@ readstdin(void)
 			str_compare
 		);
 		items[i].hp = p != NULL;
-		line = NULL;
+		line = NULL; /* next call of getline() allocates a new line */
 	}
 	free(line);
 	if (items)
