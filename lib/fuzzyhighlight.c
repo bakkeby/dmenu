@@ -9,19 +9,23 @@ drawhighlights(struct item *item, int x, int y, int maxw)
 	if (!(strlen(itemtext) && strlen(text)))
 		return;
 
+	/* Do not highlight items scheduled for output */
+	if (issel(item->id))
+		return;
+
 	drw_setscheme(drw, scheme[item == sel
 	                   ? SchemeSelHighlight
 	                   : SchemeNormHighlight]);
 	for (i = 0, highlight = itemtext; *highlight && text[i];) {
 		if (!fstrncmp(&(*highlight), &text[i], 1))
 		{
-			/* get indentation */
+			/* Get indentation */
 			c = *highlight;
 			*highlight = '\0';
 			indent = TEXTW(itemtext) - lrpad;
 			*highlight = c;
 
-			/* highlight character */
+			/* Highlight character */
 			c = highlight[1];
 			highlight[1] = '\0';
 			drw_text(
