@@ -13,6 +13,8 @@ dmenu \- dynamic menu
 .RB [ \-dp ]
 .RB [ \-g
 .IR columns ]
+.RB [ \-gw
+.IR width ]
 .RB [ \-pwrl
 .IR int ]
 .RB [ \-pwrl_reduction
@@ -138,6 +140,13 @@ dmenu lists items vertically, with the given number of lines (rows).
 .TP
 .BI \-g " columns"
 dmenu lists items in a grid, with the given number of columns.
+.TP
+.BI \-gw " width"
+defines the minimum width of columns, in pixels, and will override the number of columns specified
+wth the \-g argument if that would result in columns with a width less than the specified minimum
+width.
+
+If only the minimum width is specified then that is used to derive the number of columns shown.
 .TP
 .BI \-pwrl " int"
 specifies the powerline separator to use (values 0 through 4).
@@ -358,6 +367,8 @@ dmenu will not read X resources.
 .SH USAGE
 dmenu is controlled by the keyboard and optionally the mouse can be used to select items.
 Items are selected using the arrow keys, page up, page down, home, and end.
+
+Keybindings can be changed in the configuration file if needed.
 .TP
 .B Tab
 Copy the selected item to the input field.

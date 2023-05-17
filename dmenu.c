@@ -75,6 +75,7 @@ static char * (*sepchr)(const char *, int);
 static int bh, mw, mh;
 static int dmx = ~0, dmy = ~0, dmw = 0; /* put dmenu at these x and y offsets and w width */
 static int dmxp = ~0, dmyp = ~0, dmwp = ~0; /* percentage values for the above */
+static int gridcolw = 0; /* if positive then it is used to calculate number of grid columns */
 static int inputw = 0, promptw;
 static int lrpad; /* sum of left and right padding */
 static int numlockmask = 0;
@@ -1066,6 +1067,13 @@ setup(void)
 	x = xoffset + dmx;
 	y = yoffset + dmy;
 
+	/* Recalculate columns if gridcolw is set and:
+	 *    - columns is not set with the -g argument or
+	 *    - the calculated number of columns is less than the given columns
+	 */
+	if (gridcolw > 0 && (!columns || (mw / gridcolw) < columns))
+		columns = mw / gridcolw;
+
 	for (item = items; !lines && item && item->text; ++item) {
 		curstrlen = strlen(item->text);
 		if (numwidthchecks || minstrlen < curstrlen) {
@@ -1157,6 +1165,7 @@ usage(void)
 	fputs("usage: dmenu [-bcfiIjJkKnNrRsStuUvxyz]"
 		" [-bw width]"
 		" [-g columns]"
+		" [-gw width]"
 		" [-l lines]"
 		" [-p prompt]"
 		"\n            "
@@ -1198,6 +1207,7 @@ usage(void)
 	fprintf(stderr, ofmt, "-p <text>, -prompt <text>", "defines the prompt to be displayed to the left of the input field", "");
 	fprintf(stderr, ofmt, "-l <lines>", "specifies the number of lines for grid presentation", "");
 	fprintf(stderr, ofmt, "-g <columns>", "specifies the number of columns for grid presentation", "");
+	fprintf(stderr, ofmt, "-gw <width>", "specifies the minimum width of columns in a grid presentation", "");
 	fprintf(stderr, ofmt, "-pwrl <int>", "specifies the powerline separator to use (values 0 through 4)", "");
 	fprintf(stderr, ofmt, "-pwrl_reduction <pixels>", "adjusts the angle and size of the powerline separator", "");
 
@@ -1487,6 +1497,10 @@ main(int argc, char *argv[])
 		} else if arg("-g") {   /* number of columns in grid */
 			columns = atoi(argv[++i]);
 			if (columns && lines == 0)
+				lines = 1;
+		} else if arg("-gw") { /* grid column width used to calculate the number of columns */
+			gridcolw = atoi(argv[++i]);
+			if (gridcolw && lines == 0)
 				lines = 1;
 		} else if arg("-dp") { /* double print when using separator */
 			double_print = 1;
