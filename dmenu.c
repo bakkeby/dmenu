@@ -800,7 +800,7 @@ xerrordummy(Display *dpy, XErrorEvent *ee)
 }
 
 void
-xinitvisual()
+xinitvisual(void)
 {
 	XVisualInfo *infos;
 	XRenderPictFormat *fmt;

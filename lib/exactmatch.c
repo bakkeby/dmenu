@@ -54,8 +54,7 @@ exactmatch(void)
 			matches = lprefix;
 		matchend = prefixend;
 	}
-	if (lsubstr)
-	{
+	if (lsubstr) {
 		if (matches) {
 			matchend->right = lsubstr;
 			lsubstr->left = matchend;

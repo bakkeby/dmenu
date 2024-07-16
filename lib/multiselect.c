@@ -8,7 +8,7 @@ issel(size_t id)
 }
 
 static void
-printsel()
+printsel(void)
 {
 	for (int i = 0; i < selidsize; i++) {
 		if (selid[i] != -1 && (!sel || sel->id != selid[i])) {
@@ -41,7 +41,7 @@ printsel()
 }
 
 static void
-printinput()
+printinput(void)
 {
 	for (int i = 0; i < selidsize; i++) {
 		if (selid[i] != -1 && (!sel || sel->id != selid[i])) {
@@ -55,7 +55,7 @@ printinput()
 }
 
 static void
-selsel()
+selsel(void)
 {
 	if (!sel)
 		return;
