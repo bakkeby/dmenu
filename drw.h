@@ -30,6 +30,9 @@ typedef struct {
 	Fnt *fonts;
 } Drw;
 
+/* Exposed UTF-8 functions */
+size_t utf8len(const char *c);
+
 /* Drawable abstraction */
 Drw *drw_create(Display *dpy, int screen, Window win, unsigned int w, unsigned int h, Visual *visual, unsigned int depth, Colormap cmap);
 void drw_resize(Drw *drw, unsigned int w, unsigned int h);

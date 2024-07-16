@@ -61,6 +61,13 @@ utf8decode(const char *c, long *u, size_t clen)
 	return len;
 }
 
+size_t
+utf8len(const char *c)
+{
+	long utf8codepoint = 0;
+	return utf8decode(c, &utf8codepoint, UTF_SIZ);
+}
+
 Drw *
 drw_create(Display *dpy, int screen, Window root, unsigned int w, unsigned int h, Visual *visual, unsigned int depth, Colormap cmap)
 {

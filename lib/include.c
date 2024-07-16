@@ -3,7 +3,7 @@
 #include "dynamicoptions.c"
 #include "exactmatch.c"
 #include "fuzzymatch.c"
-#include "fuzzyhighlight.c"
+#include "highlight.c"
 #include "multiselect.c"
 #include "mousesupport.c"
 #include "navhistory.c"
