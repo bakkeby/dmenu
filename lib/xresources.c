@@ -17,6 +17,12 @@ readxresources(void)
 		if (XrmGetResource(xdb, "dmenu.font", "*", &type, &xval))
 			fonts[0] = strdup(xval.addr);
 
+		if (XrmGetResource(xdb, "dmenu.selfont", "*", &type, &xval))
+			selfonts[0] = strdup(xval.addr);
+
+		if (XrmGetResource(xdb, "dmenu.outfont", "*", &type, &xval))
+			outfonts[0] = strdup(xval.addr);
+
 		for (s = 0; s < SchemeLast; s++) {
 			sprintf(resource, pattern, colors[s][ColResource], "fg");
 			if (XrmGetResource(xdb, resource, "*", &type, &xval))

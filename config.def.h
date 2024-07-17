@@ -7,6 +7,10 @@ static char *fonts[] =
 	"monospace:size=10"
 };
 
+/* Optionally specify separate font sets for selected and output menu items */
+static char *selfonts[] = {0};
+static char *outfonts[] = {0};
+
 static char *prompt        = NULL; /* -p  option; prompt to the left of input field */
 static const char *dynamic = NULL; /* -dy option; dynamic command to run on input change */
 static const char *lsymbol = "<";  /* shown when there are more items on the left */

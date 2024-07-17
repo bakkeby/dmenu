@@ -101,6 +101,7 @@ static Colormap cmap;
 
 static Drw *drw;
 static Clr *scheme[SchemeLast];
+static Fnt *normal_fonts, *selected_fonts, *output_fonts;
 
 static void backspace(const Arg *arg);
 static void complete(const Arg *arg);
@@ -278,22 +279,27 @@ drawitem(struct item *item, int x, int y, int w)
 	int r;
 	char *text = item->text;
 
-	if (item == sel)
+	if (item == sel) {
 		item->scheme = SchemeSel;
-	else if (item->hp)
+		drw->fonts = selected_fonts;
+	} else if (item->hp) {
 		item->scheme = SchemeHp;
-	else if (enabled(HighlightAdjacent) && columns < 2 && (item->left == sel || item->right == sel))
+	} else if (enabled(HighlightAdjacent) && columns < 2 && (item->left == sel || item->right == sel)) {
 		item->scheme = SchemeAdjacent;
-	else if (issel(item->id))
+	} else if (issel(item->id)) {
 		item->scheme = SchemeOut;
-	else
+		drw->fonts = output_fonts;
+	} else {
 		item->scheme = SchemeNorm;
+	}
 
 	drw_setscheme(drw, scheme[item->scheme]);
 
 	item->x = x;
 	r = drw_text(drw, x, y, w, bh, lrpad / 2, text, 0);
 	drawhighlights(item, x, y, w);
+	drw->fonts = normal_fonts;
+
 	return r;
 }
 
@@ -1212,6 +1218,8 @@ usage(void)
 
 	fprintf(stderr, "\nColors:\n");
 	fprintf(stderr, ofmt, "-fn <font>", "defines the font or font set used", "");
+	fprintf(stderr, ofmt, "-fns <font>", "defines the selected item font or font set used", "");
+	fprintf(stderr, ofmt, "-fno <font>", "defines the output item font or font set used", "");
 	fprintf(stderr, ofmt, "-nb <color>", "defines the normal background color", "");
 	fprintf(stderr, ofmt, "-nf <color>", "defines the normal foreground color", "");
 	fprintf(stderr, ofmt, "-sb <color>", "defines the selected background color", "");
@@ -1527,6 +1535,10 @@ main(int argc, char *argv[])
 		/* Color arguments */
 		} else if arg("-fn") { /* font or font set */
 			fonts[0] = argv[++i];
+		} else if arg("-fns") { /* selected font or font set */
+			selfonts[0] = argv[++i];
+		} else if arg("-fno") { /* selected font or font set */
+			outfonts[0] = argv[++i];
 		} else if arg("-ab") { /* adjacent background color */
 			colors[SchemeAdjacent][ColBg] = argv[++i];
 		} else if arg("-af") { /* adjacent foreground color */
@@ -1570,6 +1582,21 @@ main(int argc, char *argv[])
 
 	if (!drw_fontset_create(drw, (const char**)fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
+	selected_fonts = output_fonts = normal_fonts = drw->fonts;
+
+	if (selfonts[0]) {
+		if (!drw_fontset_create(drw, (const char**)selfonts, LENGTH(selfonts)))
+			die("no selected fonts could be loaded.");
+		selected_fonts = drw->fonts;
+	}
+
+	if (outfonts[0]) {
+		if (!drw_fontset_create(drw, (const char**)outfonts, LENGTH(outfonts)))
+			die("no output fonts could be loaded.");
+		output_fonts = drw->fonts;
+	}
+
+	drw->fonts = normal_fonts;
 
 	lrpad = drw->fonts->h;
 
