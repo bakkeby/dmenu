@@ -38,6 +38,7 @@ static unsigned long functionality = 0
 //	|Incremental // makes dmenu print out the current text each time a key is pressed
 //	|InstantReturn // makes dmenu select an item immediately if there is only one matching option left
 //	|Managed // allow dmenu to be managed by window managers (disables override_redirect)
+//	|NoInput // disables the input field in dmenu, forcing the user to select options using mouse or keyboard
 //	|PasswordInput // indicates that the input is a password and should be masked
 //	|PrintIndex // makes dmenu print out the 0-based index instead of the matched text itself
 //	|PrintInputText // makes dmenu print the input text instead of the selected item

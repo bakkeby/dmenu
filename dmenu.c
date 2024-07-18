@@ -75,7 +75,7 @@ static int bh, mw, mh;
 static int dmx = ~0, dmy = ~0, dmw = 0; /* put dmenu at these x and y offsets and w width */
 static int dmxp = ~0, dmyp = ~0, dmwp = ~0; /* percentage values for the above */
 static int gridcolw = 0; /* if positive then it is used to calculate number of grid columns */
-static int inputw = 0, promptw;
+static int inputw = 0, promptw = 0;
 static int lrpad; /* sum of left and right padding */
 static int numlockmask = 0;
 static size_t cursor;
@@ -224,7 +224,7 @@ cleanup(void)
 void
 complete(const Arg *arg)
 {
-	if (!sel)
+	if (!sel || enabled(NoInput))
 		return;
 	cursor = strnlen(sel->text, sizeof text - 1);
 	memcpy(text, sel->text, cursor);
@@ -308,8 +308,9 @@ drawmenu(void)
 {
 	unsigned int curpos;
 	struct item *item, *prev = NULL;
-	int i, x = 0, y = 0, w, rpad = 0, itw = 0, stw = 0;
+	int i, x = 0, y = 0, w = 0, rpad = 0, itw = 0, stw = 0;
 	int fh = drw->fonts->h;
+	y = (enabled(NoInput) && !promptw ? -bh : 0);
 
 	struct item **buffer;
 	buffer = calloc(lines, sizeof(struct item *));
@@ -331,22 +332,25 @@ drawmenu(void)
 		drw_setscheme(drw, scheme[SchemePrompt]);
 		x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, prompt, 0);
 	}
-	/* draw input field */
-	w = (lines > 0 || !matches) ? mw - x : inputw;
 
-	drw_setscheme(drw, scheme[SchemeNorm]);
-	if (enabled(PasswordInput)) {
-		censort = ecalloc(1, sizeof(text));
-		memset(censort, csymbol, strlen(text));
-		drw_text(drw, x, 0, w, bh, lrpad / 2, censort, 0);
-		free(censort);
-	} else
-		drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
+	if (disabled(NoInput)) {
+		/* draw input field */
+		w = (lines > 0 || !matches) ? mw - x : inputw;
 
-	curpos = TEXTW(text) - TEXTW(&text[cursor]);
-	if (hasfocus && (curpos += lrpad / 2 - 1) < w) {
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		drw_rect(drw, x + curpos, 2 + (bh-fh)/2, 2, fh - 4, 1, 0);
+		if (enabled(PasswordInput)) {
+			censort = ecalloc(1, sizeof(text));
+			memset(censort, csymbol, strlen(text));
+			drw_text(drw, x, 0, w, bh, lrpad / 2, censort, 0);
+			free(censort);
+		} else
+			drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
+
+		curpos = TEXTW(text) - TEXTW(&text[cursor]);
+		if (hasfocus && (curpos += lrpad / 2 - 1) < w) {
+			drw_setscheme(drw, scheme[SchemeNorm]);
+			drw_rect(drw, x + curpos, 2 + (bh-fh)/2, 2, fh - 4, 1, 0);
+		}
 	}
 
 	if (enabled(ShowNumbers)) {
@@ -356,8 +360,8 @@ drawmenu(void)
 	if (lines > 0) {
 		/* draw grid */
 		int i = 0, ix = (enabled(PromptIndent) ? x : 0);
-		for (item = curr; item != next; item = item->right, i++) {
-			if (columns) {
+		if (columns) {
+			for (item = curr; item != next; item = item->right, i++) {
 				drawitem(
 					item,
 					ix + ((i / lines) *  ((mw - ix) / columns)),
@@ -379,7 +383,9 @@ drawmenu(void)
 					}
 					buffer[i % lines] = item;
 				}
-			} else {
+			}
+		} else {
+			for (item = curr; item != next; item = item->right, i++) {
 				drawitem(item, ix, y += bh, mw - ix);
 			}
 		}
@@ -681,7 +687,6 @@ keypress(XEvent *e)
 	len = XmbLookupString(xic, ev, buf, sizeof buf, &ksym, &status);
 	keysym = XGetKeyboardMapping(dpy, (KeyCode)ev->keycode, 1, &keysyms_return);
 
-
 	for (i = 0; i < LENGTH(keys); i++) {
 		if (*keysym == keys[i].keysym
 				&& CLEANMASK(keys[i].mod) == CLEANMASK(ev->state)
@@ -699,7 +704,7 @@ keypress(XEvent *e)
 			fflush(stdout);
 		}
 		drawmenu();
-	} else if (!iscntrl(*buf) && type) {
+	} else if (disabled(NoInput) && !iscntrl(*buf) && type) {
 		insert(buf, len);
 		if (enabled(Incremental)) {
 			puts(text);
@@ -1058,6 +1063,15 @@ setup(void)
 	if (enabled(Centered))
 		dmw = MIN(MAX(max_textw() + promptw, dmw), max_w);
 
+	mw = dmw - border_width * 2;
+	if (enabled(NoInput) && lines) {
+		if (!promptw) {
+			mh -= bh;
+		} else {
+			promptw = mw;
+		}
+	}
+
 	if (dmxp != ~0)
 		dmx = sidepad + (max_w - dmw) * dmxp / 100;
 	else if (dmx == ~0)
@@ -1068,7 +1082,6 @@ setup(void)
 	} else if (dmy == ~0)
 		dmy = enabled(TopBar) ? vertpad : max_h - mh;
 
-	mw = dmw - border_width * 2;
 	x = xoffset + dmx;
 	y = yoffset + dmy;
 
@@ -1079,15 +1092,17 @@ setup(void)
 	if (gridcolw > 0 && (!columns || (mw / gridcolw) < columns))
 		columns = mw / gridcolw;
 
-	for (item = items; !lines && item && item->text; ++item) {
-		curstrlen = strlen(item->text);
-		if (numwidthchecks || minstrlen < curstrlen) {
-			numwidthchecks = MAX(numwidthchecks - 1, 0);
-			minstrlen = MAX(minstrlen, curstrlen);
-			if ((tmp = textw_clamp(item->text, mw/3)) > inputw) {
-				inputw = tmp;
-				if (tmp == mw/3)
-					break;
+	if (disabled(NoInput)) {
+		for (item = items; !lines && item && item->text; ++item) {
+			curstrlen = strlen(item->text);
+			if (numwidthchecks || minstrlen < curstrlen) {
+				numwidthchecks = MAX(numwidthchecks - 1, 0);
+				minstrlen = MAX(minstrlen, curstrlen);
+				if ((tmp = textw_clamp(item->text, mw/3)) > inputw) {
+					inputw = tmp;
+					if (tmp == mw/3)
+						break;
+				}
 			}
 		}
 	}
@@ -1280,6 +1295,8 @@ usage(void)
 	fprintf(stderr, ofmt, "    -NoHighlightAdjacent", "only the selected item is highlighted", disabled(HighlightAdjacent) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -Incremental", "makes dmenu print out the current text each time a key is pressed", enabled(Incremental) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -NoIncremental", "dmenu will not print out the current text each time a key is pressed", disabled(Incremental) ? " (default)" : "");
+	fprintf(stderr, ofmt, "    -Input", "enables input field allowing the user to search through the options", disabled(NoInput) ? " (default)" : "");
+	fprintf(stderr, ofmt, "    -NoInput", "disables the input field, forcing the user to select options using mouse or keyboard", enabled(NoInput) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -Managed", "allows dmenu to be managed by a window manager", enabled(Managed) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -NoManaged", "dmenu manages itself, window manager not to interfere", disabled(Managed) ? " (default)" : "");
 	fprintf(stderr, ofmt, "    -PrintInputText", "makes dmenu print the input text instead of the selected item", enabled(PrintInputText) ? " (default)" : "");
@@ -1435,6 +1452,10 @@ main(int argc, char *argv[])
 			enablefunc(Incremental);
 		} else if arg("-NoIncremental") {
 			disablefunc(Incremental);
+		} else if arg("-Input") { /* whether text input is available for search functionality */
+			disablefunc(NoInput);
+		} else if arg("-NoInput") {
+			enablefunc(NoInput);
 		} else if (arg("-PrintIndex") || arg("-k")) { /* makes dmenu print out the 0-based index instead of the matched text itself */
 			enablefunc(PrintIndex);
 		} else if (arg("-NoPrintIndex") || arg("-K")) { /* makes dmenu print out the matched text itself */
