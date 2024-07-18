@@ -45,6 +45,7 @@ dmenu \- dynamic menu
 .IR monitor ]
 .RB [ \-e
 .IR windowid ]
+.RB [ \-ea ]
 .RB [ \-fn
 .IR font ]
 .RB [ \-fns
@@ -112,7 +113,10 @@ dmenu appears at the bottom of the screen.
 dmenu appears in the center of the screen.
 .TP
 .BI \-e " windowid"
-embed into windowid.
+embed into the given window ID.
+.TP
+.B \-ea
+embed into the currently focused (active) window.
 .TP
 .BI \-m " monitor"
 dmenu is displayed on the monitor number supplied. Monitor numbers are starting

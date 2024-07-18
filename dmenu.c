@@ -68,7 +68,7 @@ typedef struct {
 } Key;
 
 static char text[BUFSIZ] = "";
-static long embed = 0;
+static long unsigned int embed = 0;
 static char separator, separator_reverse;
 static char * (*sepchr)(const char *, int);
 static int bh, mw, mh;
@@ -153,7 +153,7 @@ static void run(void);
 static void setup(void);
 static unsigned int textw_clamp(const char *str, unsigned int n);
 static void updatenumlockmask(void);
-static void usage(void);
+static void usage(FILE *stream);
 
 #include "lib/include.c"
 
@@ -903,19 +903,8 @@ void
 run(void)
 {
 	XEvent ev;
-	int i;
 
 	while (!XNextEvent(dpy, &ev)) {
-		if (preselected) {
-			for (i = 0; i < preselected; i++) {
-				if (sel && sel->right && (sel = sel->right) == next) {
-					curr = next;
-					calcoffsets();
-				}
-			}
-			drawmenu();
-			preselected = 0;
-		}
 		if (XFilterEvent(&ev, win))
 			continue;
 		switch(ev.type) {
@@ -1153,6 +1142,15 @@ setup(void)
 			grabfocus();
 	}
 	drw_resize(drw, mw, mh);
+
+	if (preselected) {
+		for (i = 0; i < preselected; i++) {
+			if (sel && sel->right && (sel = sel->right) == next) {
+				curr = next;
+				calcoffsets();
+			}
+		}
+	}
 	drawmenu();
 }
 
@@ -1180,7 +1178,7 @@ updatenumlockmask(void)
 }
 
 void
-usage(void)
+usage(FILE *stream)
 {
 	fputs("usage: dmenu [-bcfiIjJkKnNrRsStuUvxyz]"
 		" [-bw width]"
@@ -1203,113 +1201,112 @@ usage(void)
 		" [-w windowid]"
 		"\n            "
 		" [-fn font] [-nb color] [-nf color] [-sb color] [-sf color] ..."
-		"\n\n", stderr);
+		"\n\n", stream);
 
 	fputs("dmenu is a dynamic menu for X, which reads a list of newline-separated items from stdin."
 		"\nWhen the user selects an item and presses Return, their choice is printed to stdout and"
 		"\ndmenu terminates. Entering text will narrow the items to those matching the tokens in the"
-		"\ninput.\n\n", stderr);
+		"\ninput.\n\n", stream);
 
 	char ofmt[] = "   %-30s%s%s\n";
-	fprintf(stderr, "Placement options:\n");
-	fprintf(stderr, ofmt, "-t", "dmenu is shown at the top of the screen", enabled(TopBar) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-b", "dmenu is shown at the bottom of the screen", disabled(TopBar) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-c", "dmenu is shown in the center of the screen", enabled(Centered) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-e <windowid>", "embed into the given window ID", "");
-	fprintf(stderr, ofmt, "-m <monitor>", "specifies the monitor index to place dmenu on (starts at 0)", "");
-	fprintf(stderr, ofmt, "-x <offset>", "specifies the x position relative to monitor", "");
-	fprintf(stderr, ofmt, "-y <offset>", "specifies the y position relative to monitor", "");
-	fprintf(stderr, ofmt, "-w <width>", "specifies the width of dmenu", "");
+	fprintf(stream, "Placement options:\n");
+	fprintf(stream, ofmt, "-t", "dmenu is shown at the top of the screen", enabled(TopBar) ? " (default)" : "");
+	fprintf(stream, ofmt, "-b", "dmenu is shown at the bottom of the screen", disabled(TopBar) ? " (default)" : "");
+	fprintf(stream, ofmt, "-c", "dmenu is shown in the center of the screen", enabled(Centered) ? " (default)" : "");
+	fprintf(stream, ofmt, "-e <windowid>", "embed into the given window ID", "");
+	fprintf(stream, ofmt, "-ea", "embed into the currently focused (active) window", "");
+	fprintf(stream, ofmt, "-m <monitor>", "specifies the monitor index to place dmenu on (starts at 0)", "");
+	fprintf(stream, ofmt, "-x <offset>", "specifies the x position relative to monitor", "");
+	fprintf(stream, ofmt, "-y <offset>", "specifies the y position relative to monitor", "");
+	fprintf(stream, ofmt, "-w <width>", "specifies the width of dmenu", "");
 
-	fprintf(stderr, "\nAppearance:\n");
-	fprintf(stderr, ofmt, "-bw <width>", "specifies the border width", "");
-	fprintf(stderr, ofmt, "-h <height>", "specifies the height of dmenu lines", "");
-	fprintf(stderr, ofmt, "-p <text>, -prompt <text>", "defines the prompt to be displayed to the left of the input field", "");
-	fprintf(stderr, ofmt, "-l <lines>", "specifies the number of lines for grid presentation", "");
-	fprintf(stderr, ofmt, "-g <columns>", "specifies the number of columns for grid presentation", "");
-	fprintf(stderr, ofmt, "-gw <width>", "specifies the minimum width of columns in a grid presentation", "");
-	fprintf(stderr, ofmt, "-pwrl <int>", "specifies the powerline separator to use (values 0 through 4)", "");
-	fprintf(stderr, ofmt, "-pwrl_reduction <pixels>", "adjusts the angle and size of the powerline separator", "");
+	fprintf(stream, "\nAppearance:\n");
+	fprintf(stream, ofmt, "-bw <width>", "specifies the border width", "");
+	fprintf(stream, ofmt, "-h <height>", "specifies the height of dmenu lines", "");
+	fprintf(stream, ofmt, "-p <text>, -prompt <text>", "defines the prompt to be displayed to the left of the input field", "");
+	fprintf(stream, ofmt, "-l <lines>", "specifies the number of lines for grid presentation", "");
+	fprintf(stream, ofmt, "-g <columns>", "specifies the number of columns for grid presentation", "");
+	fprintf(stream, ofmt, "-gw <width>", "specifies the minimum width of columns in a grid presentation", "");
+	fprintf(stream, ofmt, "-pwrl <int>", "specifies the powerline separator to use (values 0 through 4)", "");
+	fprintf(stream, ofmt, "-pwrl_reduction <pixels>", "adjusts the angle and size of the powerline separator", "");
 
-	fprintf(stderr, "\nColors:\n");
-	fprintf(stderr, ofmt, "-fn <font>", "defines the font or font set used", "");
-	fprintf(stderr, ofmt, "-fns <font>", "defines the selected item font or font set used", "");
-	fprintf(stderr, ofmt, "-fno <font>", "defines the output item font or font set used", "");
-	fprintf(stderr, ofmt, "-nb <color>", "defines the normal background color", "");
-	fprintf(stderr, ofmt, "-nf <color>", "defines the normal foreground color", "");
-	fprintf(stderr, ofmt, "-sb <color>", "defines the selected background color", "");
-	fprintf(stderr, ofmt, "-sf <color>", "defines the selected foreground color", "");
-	fprintf(stderr, ofmt, "-bb <color>", "defines the border background color", "");
-	fprintf(stderr, ofmt, "-bf <color>", "defines the border foreground color", "");
-	fprintf(stderr, ofmt, "-pb <color>", "defines the prompt background color", "");
-	fprintf(stderr, ofmt, "-pf <color>", "defines the prompt foreground color", "");
-	fprintf(stderr, ofmt, "-ab <color>", "defines the adjacent background color", "");
-	fprintf(stderr, ofmt, "-af <color>", "defines the adjacent foreground color", "");
-	fprintf(stderr, ofmt, "-ob <color>", "defines the out(put) background color", "");
-	fprintf(stderr, ofmt, "-of <color>", "defines the out(put) foreground color", "");
-	fprintf(stderr, ofmt, "-hb <color>", "defines the high priority background color", "");
-	fprintf(stderr, ofmt, "-hf <color>", "defines the high priority foreground color", "");
-	fprintf(stderr, ofmt, "-nhb <color>", "defines the normal highlight background color", "");
-	fprintf(stderr, ofmt, "-nhf <color>", "defines the normal highlight foreground color", "");
-	fprintf(stderr, ofmt, "-shb <color>", "defines the selected highlight background color", "");
-	fprintf(stderr, ofmt, "-shf <color>", "defines the selected highlight foreground color", "");
+	fprintf(stream, "\nColors:\n");
+	fprintf(stream, ofmt, "-fn <font>", "defines the font or font set used", "");
+	fprintf(stream, ofmt, "-fns <font>", "defines the selected item font or font set used", "");
+	fprintf(stream, ofmt, "-fno <font>", "defines the output item font or font set used", "");
+	fprintf(stream, ofmt, "-nb <color>", "defines the normal background color", "");
+	fprintf(stream, ofmt, "-nf <color>", "defines the normal foreground color", "");
+	fprintf(stream, ofmt, "-sb <color>", "defines the selected background color", "");
+	fprintf(stream, ofmt, "-sf <color>", "defines the selected foreground color", "");
+	fprintf(stream, ofmt, "-bb <color>", "defines the border background color", "");
+	fprintf(stream, ofmt, "-bf <color>", "defines the border foreground color", "");
+	fprintf(stream, ofmt, "-pb <color>", "defines the prompt background color", "");
+	fprintf(stream, ofmt, "-pf <color>", "defines the prompt foreground color", "");
+	fprintf(stream, ofmt, "-ab <color>", "defines the adjacent background color", "");
+	fprintf(stream, ofmt, "-af <color>", "defines the adjacent foreground color", "");
+	fprintf(stream, ofmt, "-ob <color>", "defines the out(put) background color", "");
+	fprintf(stream, ofmt, "-of <color>", "defines the out(put) foreground color", "");
+	fprintf(stream, ofmt, "-hb <color>", "defines the high priority background color", "");
+	fprintf(stream, ofmt, "-hf <color>", "defines the high priority foreground color", "");
+	fprintf(stream, ofmt, "-nhb <color>", "defines the normal highlight background color", "");
+	fprintf(stream, ofmt, "-nhf <color>", "defines the normal highlight foreground color", "");
+	fprintf(stream, ofmt, "-shb <color>", "defines the selected highlight background color", "");
+	fprintf(stream, ofmt, "-shf <color>", "defines the selected highlight foreground color", "");
 
-	fprintf(stderr, "\nFor color settings #RGB, #RRGGBB, and X color names are supported.\n");
+	fprintf(stream, "\nFor color settings #RGB, #RRGGBB, and X color names are supported.\n");
 
-	fprintf(stderr, "\nFunctionality:\n");
-	fprintf(stderr, ofmt, "-d <delimiter>", "separates the input in two halves; display first and return second", "");
-	fprintf(stderr, ofmt, "-D <delimiter>", "as -d but based on the last occurrence of the delimiter", "");
-	fprintf(stderr, ofmt, "-dp", "when using -d or -D, display first and return original line (double print)", "");
-	fprintf(stderr, ofmt, "-dy <command>", "a command used to dynamically change the dmenu options", "");
-	fprintf(stderr, ofmt, "-hp <items>", "comma separated list of high priority items", "");
-	fprintf(stderr, ofmt, "-it <text>", "starts dmenu with initial text already typed in", "");
-	fprintf(stderr, ofmt, "-ps <index>", "preselect the item with the given index", "");
-	fprintf(stderr, ofmt, "-f", "dmenu grabs the keyboard before reading stdin if not reading from a tty", "");
-	fprintf(stderr, ofmt, "-H <histfile>", "specifies the history file to use", "");
-	fprintf(stderr, ofmt, "-i, -NoCaseSensitive", "makes dmenu case-insensitive", disabled(CaseSensitive) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-I, -CaseSensitive", "makes dmenu case-sensitive", enabled(CaseSensitive) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-j, -RejectNoMatch", "makes dmenu reject input if it would result in no matching item", enabled(RejectNoMatch) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-J, -NoRejectNoMatch", "input can be entered into dmenu freely", disabled(RejectNoMatch) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-k, -PrintIndex", "makes dmenu print out the 0-based index instead of the matched text", enabled(PrintIndex) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-K, -NoPrintIndex", "makes dmenu print out matched text itself", disabled(PrintIndex) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-n, -InstantReturn", "makes dmenu select an item immediately if there is only one matching option left", enabled(InstantReturn) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-N, -NoInstantReturn", "user must press enter to select an item (disables auto-select)", disabled(InstantReturn) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-u, -PasswordInput", "indicates that the input is a password and should be masked", enabled(PasswordInput) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-U, -NoPasswordInput", "indicates that the input is not a password", disabled(PasswordInput) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-s, -Sort", "enables sorting of menu items after matching", enabled(Sort) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-S, -NoSort", "disables sorting of menu items after matching", disabled(Sort) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-r, -RestrictReturn", "disables Shift-Return and Ctrl-Return to restrict dmenu to only output one item", enabled(RestrictReturn) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-R, -NoRestrictReturn", "enables Shift-Return and Ctrl-Return to allow dmenu to output more than one item", disabled(RestrictReturn) ? " (default)" : "");
-	fprintf(stderr, ofmt, "-v", "prints version information to stdout, then exits", "");
-	fprintf(stderr, ofmt, "-xpad <offset>", "sets the horizontal padding value for dmenu", "");
-	fprintf(stderr, ofmt, "-ypad <offset>", "sets the vertical padding value for dmenu", "");
-	fprintf(stderr, ofmt, "    -Alpha", "enables transparency", enabled(Alpha) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoAlpha", "disables transparency", disabled(Alpha) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -ColorEmoji", "enables color emoji in dmenu (requires libxft-bgra)", enabled(ColorEmoji) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoColorEmoji", "disables color emoji", disabled(ColorEmoji) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -ContinuousOutput", "makes dmenu print out selected items immediately rather than at the end", enabled(ContinuousOutput) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoContinuousOutput", "dmenu prints out the selected items when enter is pressed", disabled(ContinuousOutput) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -FuzzyMatch", "allows fuzzy-matching of items in dmenu", enabled(FuzzyMatch) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoFuzzyMatch", "enables exact matching of items in dmenu", disabled(FuzzyMatch) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -HighlightAdjacent", "makes dmenu highlight items adjacent to the selected item", enabled(HighlightAdjacent) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoHighlightAdjacent", "only the selected item is highlighted", disabled(HighlightAdjacent) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -Incremental", "makes dmenu print out the current text each time a key is pressed", enabled(Incremental) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoIncremental", "dmenu will not print out the current text each time a key is pressed", disabled(Incremental) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -Input", "enables input field allowing the user to search through the options", disabled(NoInput) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoInput", "disables the input field, forcing the user to select options using mouse or keyboard", enabled(NoInput) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -Managed", "allows dmenu to be managed by a window manager", enabled(Managed) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoManaged", "dmenu manages itself, window manager not to interfere", disabled(Managed) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -PrintInputText", "makes dmenu print the input text instead of the selected item", enabled(PrintInputText) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoPrintInputText", "dmenu to print the text of the selected item", disabled(PrintInputText) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -PromptIndent", "makes dmenu indent items at the same level as the prompt on multi-line views", enabled(PromptIndent) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoPromptIndent", "items on multi-line views are not indented", disabled(PromptIndent) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -ShowNumbers", "makes dmenu display the number of matched and total items in the top right corner", enabled(ShowNumbers) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoShowNumbers", "dmenu will not show item count", disabled(ShowNumbers) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -Xresources", "makes dmenu read X resources at startup", enabled(Xresources) ? " (default)" : "");
-	fprintf(stderr, ofmt, "    -NoXresources", "dmenu will not read X resources", disabled(Xresources) ? " (default)" : "");
-
-	fprintf(stderr, "\n");
-	exit(1);
+	fprintf(stream, "\nFunctionality:\n");
+	fprintf(stream, ofmt, "-d <delimiter>", "separates the input in two halves; display first and return second", "");
+	fprintf(stream, ofmt, "-D <delimiter>", "as -d but based on the last occurrence of the delimiter", "");
+	fprintf(stream, ofmt, "-dp", "when using -d or -D, display first and return original line (double print)", "");
+	fprintf(stream, ofmt, "-dy <command>", "a command used to dynamically change the dmenu options", "");
+	fprintf(stream, ofmt, "-hp <items>", "comma separated list of high priority items", "");
+	fprintf(stream, ofmt, "-it <text>", "starts dmenu with initial text already typed in", "");
+	fprintf(stream, ofmt, "-ps <index>", "preselect the item with the given index", "");
+	fprintf(stream, ofmt, "-f", "dmenu grabs the keyboard before reading stdin if not reading from a tty", "");
+	fprintf(stream, ofmt, "-H <histfile>", "specifies the history file to use", "");
+	fprintf(stream, ofmt, "-i, -NoCaseSensitive", "makes dmenu case-insensitive", disabled(CaseSensitive) ? " (default)" : "");
+	fprintf(stream, ofmt, "-I, -CaseSensitive", "makes dmenu case-sensitive", enabled(CaseSensitive) ? " (default)" : "");
+	fprintf(stream, ofmt, "-j, -RejectNoMatch", "makes dmenu reject input if it would result in no matching item", enabled(RejectNoMatch) ? " (default)" : "");
+	fprintf(stream, ofmt, "-J, -NoRejectNoMatch", "input can be entered into dmenu freely", disabled(RejectNoMatch) ? " (default)" : "");
+	fprintf(stream, ofmt, "-k, -PrintIndex", "makes dmenu print out the 0-based index instead of the matched text", enabled(PrintIndex) ? " (default)" : "");
+	fprintf(stream, ofmt, "-K, -NoPrintIndex", "makes dmenu print out matched text itself", disabled(PrintIndex) ? " (default)" : "");
+	fprintf(stream, ofmt, "-n, -InstantReturn", "makes dmenu select an item immediately if there is only one matching option left", enabled(InstantReturn) ? " (default)" : "");
+	fprintf(stream, ofmt, "-N, -NoInstantReturn", "user must press enter to select an item (disables auto-select)", disabled(InstantReturn) ? " (default)" : "");
+	fprintf(stream, ofmt, "-u, -PasswordInput", "indicates that the input is a password and should be masked", enabled(PasswordInput) ? " (default)" : "");
+	fprintf(stream, ofmt, "-U, -NoPasswordInput", "indicates that the input is not a password", disabled(PasswordInput) ? " (default)" : "");
+	fprintf(stream, ofmt, "-s, -Sort", "enables sorting of menu items after matching", enabled(Sort) ? " (default)" : "");
+	fprintf(stream, ofmt, "-S, -NoSort", "disables sorting of menu items after matching", disabled(Sort) ? " (default)" : "");
+	fprintf(stream, ofmt, "-r, -RestrictReturn", "disables Shift-Return and Ctrl-Return to restrict dmenu to only output one item", enabled(RestrictReturn) ? " (default)" : "");
+	fprintf(stream, ofmt, "-R, -NoRestrictReturn", "enables Shift-Return and Ctrl-Return to allow dmenu to output more than one item", disabled(RestrictReturn) ? " (default)" : "");
+	fprintf(stream, ofmt, "-v", "prints version information to stdout, then exits", "");
+	fprintf(stream, ofmt, "-xpad <offset>", "sets the horizontal padding value for dmenu", "");
+	fprintf(stream, ofmt, "-ypad <offset>", "sets the vertical padding value for dmenu", "");
+	fprintf(stream, ofmt, "    -Alpha", "enables transparency", enabled(Alpha) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoAlpha", "disables transparency", disabled(Alpha) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -ColorEmoji", "enables color emoji in dmenu (requires libxft-bgra)", enabled(ColorEmoji) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoColorEmoji", "disables color emoji", disabled(ColorEmoji) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -ContinuousOutput", "makes dmenu print out selected items immediately rather than at the end", enabled(ContinuousOutput) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoContinuousOutput", "dmenu prints out the selected items when enter is pressed", disabled(ContinuousOutput) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -FuzzyMatch", "allows fuzzy-matching of items in dmenu", enabled(FuzzyMatch) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoFuzzyMatch", "enables exact matching of items in dmenu", disabled(FuzzyMatch) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -HighlightAdjacent", "makes dmenu highlight items adjacent to the selected item", enabled(HighlightAdjacent) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoHighlightAdjacent", "only the selected item is highlighted", disabled(HighlightAdjacent) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -Incremental", "makes dmenu print out the current text each time a key is pressed", enabled(Incremental) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoIncremental", "dmenu will not print out the current text each time a key is pressed", disabled(Incremental) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -Input", "enables input field allowing the user to search through the options", disabled(NoInput) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoInput", "disables the input field, forcing the user to select options using mouse or keyboard", enabled(NoInput) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -Managed", "allows dmenu to be managed by a window manager", enabled(Managed) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoManaged", "dmenu manages itself, window manager not to interfere", disabled(Managed) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -PrintInputText", "makes dmenu print the input text instead of the selected item", enabled(PrintInputText) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoPrintInputText", "dmenu to print the text of the selected item", disabled(PrintInputText) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -PromptIndent", "makes dmenu indent items at the same level as the prompt on multi-line views", enabled(PromptIndent) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoPromptIndent", "items on multi-line views are not indented", disabled(PromptIndent) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -ShowNumbers", "makes dmenu display the number of matched and total items in the top right corner", enabled(ShowNumbers) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoShowNumbers", "dmenu will not show item count", disabled(ShowNumbers) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -Xresources", "makes dmenu read X resources at startup", enabled(Xresources) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoXresources", "dmenu will not read X resources", disabled(Xresources) ? " (default)" : "");
+	fprintf(stream, "\n");
 }
 
 #define arg(A) (!strcmp(argv[i], A))
@@ -1341,7 +1338,8 @@ main(int argc, char *argv[])
 			puts("dmenu-"VERSION);
 			exit(0);
 		} else if arg("--help") {
-			usage();
+			usage(stdout);
+			exit(0);
 		} else if arg("-Alpha") { /* enables transparency (alpha, opacity) */
 			enablefunc(Alpha);
 		} else if arg("-NoAlpha") { /* disables transparency (alpha, opacity) */
@@ -1353,6 +1351,23 @@ main(int argc, char *argv[])
 		} else if (arg("-e") && i + 1 < argc) { /* embedding window id */
 			argv[i][0] = '\0';
 			embed = strtol(argv[++i], NULL, 0);
+		} else if (arg("-ea")) { /* embedding currently focused (active) window */
+			Atom netactive = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", True);
+			Atom type;
+			int format;
+			unsigned long nitems, dl;
+			unsigned char *prop = NULL;
+			if (netactive != None) {
+				if (XGetWindowProperty(dpy, DefaultRootWindow(dpy), netactive, 0, (~0L),
+					                   False, AnyPropertyType, &type, &format,
+					                   &nitems, &dl, &prop) == Success) {
+					if (prop != NULL) {
+						if (format == 32 && nitems == 1)
+							embed = *(Window *)prop;
+						XFree(prop);
+					}
+				}
+			}
 		} else
 			continue;
 		argv[i][0] = '\0'; // mark as used
@@ -1503,7 +1518,8 @@ main(int argc, char *argv[])
 
 		/* These options take one argument */
 		} else if (i + 1 == argc) {
-			usage();
+			usage(stderr);
+			exit(1);
 		} else if arg("-m") {
 			mon = atoi(argv[++i]);
 		} else if arg("-bw") { /* border width around dmenu */
@@ -1597,7 +1613,8 @@ main(int argc, char *argv[])
 		} else if arg("-shf") { /* selected hi foreground color */
 			colors[SchemeSelHighlight][ColFg] = argv[++i];
 		} else { /* a catch all for any argument that is not recognised */
-			usage();
+			usage(stderr);
+			exit(1);
 		}
 	}
 
