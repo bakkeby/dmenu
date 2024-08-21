@@ -459,13 +459,13 @@ grabkeyboard(void)
 	/* try to grab keyboard, we may have to wait for another process to ungrab */
 	for (i = 0; i < 1000; i++) {
 		if (XGrabKeyboard(dpy, DefaultRootWindow(dpy), True, GrabModeAsync,
-		                  GrabModeAsync, CurrentTime) == GrabSuccess)
+		                  GrabModeAsync, CurrentTime) == GrabSuccess) {
+			updatenumlockmask();
 			return;
+		}
 		nanosleep(&ts, NULL);
 	}
 	die("cannot grab keyboard");
-
-	updatenumlockmask();
 }
 
 void
