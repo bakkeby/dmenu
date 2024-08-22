@@ -24,7 +24,7 @@
                              * MAX(0, MIN((y)+(h),(r).y_org+(r).height) - MAX((y),(r).y_org)))
 #define TEXTW(X)              (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define OPAQUE 0xffU
-#define CLEANMASK(mask)       (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
+#define CLEANMASK(mask, nl)   (mask & ~(nl|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define BUTTONMASK            (ButtonPressMask|ButtonReleaseMask)
 
 /* enums */
@@ -681,6 +681,7 @@ keypress(XEvent *e)
 	KeySym ksym = NoSymbol;
 	Status status;
 
+	int n; /* whether to ignore num-lock or not */
 	int len = 0;
 	int keybind_found = 0;
 	ev = &e->xkey;
@@ -688,8 +689,9 @@ keypress(XEvent *e)
 	keysym = XGetKeyboardMapping(dpy, (KeyCode)ev->keycode, 1, &keysyms_return);
 
 	for (i = 0; i < LENGTH(keys); i++) {
+		n = (keys[i].keysym >= XK_KP_Home && keys[i].keysym <= XK_KP_Delete ? 0 : numlockmask);
 		if (*keysym == keys[i].keysym
-				&& CLEANMASK(keys[i].mod) == CLEANMASK(ev->state)
+				&& CLEANMASK(keys[i].mod, n) == CLEANMASK(ev->state, n)
 				&& keys[i].func) {
 			keys[i].func(&(keys[i].arg));
 			keybind_found = 1;
