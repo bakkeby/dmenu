@@ -5,6 +5,7 @@ buttonpress(XEvent *e)
 	XButtonPressedEvent *ev = &e->xbutton;
 	int x = 0, y = 0, h = bh, w, i;
 	int cols = columns ? columns : 1;
+	int state = CLEANMASK(ev->state, numlockmask);
 
 	if (ev->window != win)
 		return;
@@ -32,7 +33,7 @@ buttonpress(XEvent *e)
 	}
 	/* middle-mouse click: paste selection */
 	if (ev->button == Button2) {
-		XConvertSelection(dpy, (ev->state & ShiftMask) ? clip : XA_PRIMARY,
+		XConvertSelection(dpy, (state & ShiftMask) ? clip : XA_PRIMARY,
 		                  utf8, utf8, win, CurrentTime);
 		drawmenu();
 		return;
@@ -53,7 +54,7 @@ buttonpress(XEvent *e)
 	}
 	if (ev->button != Button1)
 		return;
-	if (ev->state & ~ControlMask)
+	if (state & ~ControlMask)
 		return;
 	if (lines > 0) {
 		for (i = 0, item = curr; item != next; item = item->right, i++) {
@@ -65,10 +66,10 @@ buttonpress(XEvent *e)
 				(ev->x <= x + ((i / lines + 1) * (w / cols))) // column x end
 			) {
 				if (enabled(PrintIndex))
-					printf("%d\n", (item && !(ev->state & ShiftMask)) ? item->index : -1);
+					printf("%d\n", (item && !(state & ShiftMask)) ? item->index : -1);
 				else if (enabled(ContinuousOutput))
 					puts(item->text);
-				if (!(ev->state & ControlMask)) {
+				if (!(state & ControlMask)) {
 					sel = item;
 					selsel();
 					if (disabled(ContinuousOutput) && disabled(PrintIndex))
@@ -101,10 +102,10 @@ buttonpress(XEvent *e)
 			w = MIN(TEXTW(item->text), mw - x - TEXTW(rsymbol));
 			if (ev->x >= x && ev->x <= x + w) {
 				if (enabled(PrintIndex))
-					printf("%d\n", (item && !(ev->state & ShiftMask)) ? item->index : -1);
+					printf("%d\n", (item && !(state & ShiftMask)) ? item->index : -1);
 				else if (enabled(ContinuousOutput))
 					puts(item->text);
-				if (!(ev->state & ControlMask)) {
+				if (!(state & ControlMask)) {
 					sel = item;
 					selsel();
 					if (disabled(ContinuousOutput) && disabled(PrintIndex))
