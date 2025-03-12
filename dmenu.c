@@ -1131,9 +1131,9 @@ setup(void)
 		XFree(prop.value);
 	}
 
-	XMapRaised(dpy, win);
 	if (embed || enabled(Managed)) {
 		XReparentWindow(dpy, win, parentwin, x, y);
+		XMapWindow(dpy, win);
 		XSelectInput(dpy, parentwin, FocusChangeMask | SubstructureNotifyMask);
 		if (XQueryTree(dpy, parentwin, &dw, &w, &dws, &du) && dws) {
 			for (i = 0; i < du && dws[i] != win; ++i)
@@ -1142,6 +1142,8 @@ setup(void)
 		}
 		if (disabled(Managed))
 			grabfocus();
+	} else {
+		XMapRaised(dpy, win);
 	}
 	drw_resize(drw, mw, mh);
 
