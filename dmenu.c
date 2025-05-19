@@ -460,6 +460,10 @@ grabkeyboard(void)
 	for (i = 0; i < 1000; i++) {
 		if (XGrabKeyboard(dpy, DefaultRootWindow(dpy), True, GrabModeAsync,
 		                  GrabModeAsync, CurrentTime) == GrabSuccess) {
+			/* one off attempt at grabbing the mouse pointer to avoid interactions
+			 * with other windows while dmenu is active */
+			XGrabPointer(dpy, DefaultRootWindow(dpy), True, ButtonPressMask, GrabModeAsync,
+			             GrabModeAsync, None, None, CurrentTime);
 			updatenumlockmask();
 			return;
 		}

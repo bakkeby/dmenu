@@ -7,8 +7,14 @@ buttonpress(XEvent *e)
 	int cols = columns ? columns : 1;
 	int state = CLEANMASK(ev->state, numlockmask);
 
-	if (ev->window != win)
+	if (ev->window != win) {
+		/* automatically close dmenu if the user clicks outside of dmenu, but
+		 * ignore the scroll wheel and buttons above that. */
+		if (ev->button <= Button3) {
+			exit(1);
+		}
 		return;
+	}
 
 	/* right-click: exit */
 	if (ev->button == Button3)
