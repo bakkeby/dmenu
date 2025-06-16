@@ -5,7 +5,8 @@ readxresources(void)
 {
 	XrmInitialize();
 	int s;
-	char resource[40];
+	int len = 40;
+	char resource[len];
 	char *pattern = "dmenu.%s.%s.color";
 
 	char* xrm;
@@ -24,11 +25,11 @@ readxresources(void)
 			outfonts[0] = strdup(xval.addr);
 
 		for (s = 0; s < SchemeLast; s++) {
-			sprintf(resource, pattern, colors[s][ColResource], "fg");
+			snprintf(resource, len, pattern, colors[s][ColResource], "fg");
 			if (XrmGetResource(xdb, resource, "*", &type, &xval))
 				colors[s][ColFg] = strdup(xval.addr);
 
-			sprintf(resource, pattern, colors[s][ColResource], "bg");
+			snprintf(resource, len, pattern, colors[s][ColResource], "bg");
 			if (XrmGetResource(xdb, resource, "*", &type, &xval))
 				colors[s][ColBg] = strdup(xval.addr);
 		}

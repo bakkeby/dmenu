@@ -3,7 +3,8 @@ drawhighlights(struct item *item, int x, int y, int maxw)
 {
 	int i, indent, highlightlen;
 	char *highlight, *token;
-	char restorechar, tokens[sizeof text];
+	int num_tokens = sizeof text;
+	char restorechar, tokens[num_tokens];
 	char *itemtext = item->text;
 
 	if (!(strlen(itemtext) && strlen(text)))
@@ -43,7 +44,7 @@ drawhighlights(struct item *item, int x, int y, int maxw)
 	}
 
 	/* Exact highlighting */
-	strcpy(tokens, text);
+	strlcpy(tokens, text, num_tokens);
 	for (token = strtok(tokens, " "); token; token = strtok(NULL, " ")) {
 		highlight = fstrstr(itemtext, token);
 		while (highlight) {

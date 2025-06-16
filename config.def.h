@@ -27,7 +27,7 @@ static int powerline = PwrlNone;
 static int powerline_size_reduction_pixels = 0;
 
 /* Functionality that is enabled by default, see util.h for options */
-static unsigned long functionality = 0
+static uint64_t functionality = 0
 	|Alpha // enables transparency
 	|CaseSensitive // makes dmenu case sensitive by default
 //	|Centered // dmenu appears in the center of the screen

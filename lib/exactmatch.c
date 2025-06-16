@@ -4,14 +4,15 @@ exactmatch(void)
 	static char **tokv = NULL;
 	static int tokn = 0;
 
-	char buf[sizeof text], *s;
+	int buflen = sizeof text;
+	char buf[buflen], *s;
 	int i, tokc = 0;
 	int sort = enabled(Sort);
 	size_t len, textsize;
 	struct item *item, *lprefix, *lsubstr, *prefixend, *substrend;
 	struct item *lhpprefix, *hpprefixend;
 
-	strcpy(buf, text);
+	strlcpy(buf, text, buflen);
 	/* separate input text into tokens to be matched individually */
 	for (s = strtok(buf, " "); s; tokv[tokc - 1] = s, s = strtok(NULL, " "))
 		if (++tokc > tokn && !(tokv = realloc(tokv, ++tokn * sizeof *tokv)))

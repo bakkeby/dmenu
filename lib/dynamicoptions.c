@@ -2,7 +2,8 @@ static void
 refreshoptions(void)
 {
 	int dynlen = strlen(dynamic);
-	char* cmd= malloc(dynlen + strlen(text) + 2);
+	int cmdlen = dynlen + strlen(text) + 2;
+	char* cmd = malloc(cmdlen);
 
 	/* Clear selections on refresh */
 	for (int i = 0; i < selidsize; i++)
@@ -10,7 +11,7 @@ refreshoptions(void)
 
 	if (cmd == NULL)
 		die("malloc:");
-	sprintf(cmd, "%s %s", dynamic, text);
+	snprintf(cmd, cmdlen, "%s %s", dynamic, text);
 	FILE *stream = popen(cmd, "r");
 	if (!stream)
 		die("popen(%s):", cmd);

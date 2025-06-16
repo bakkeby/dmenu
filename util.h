@@ -1,5 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 
+#include <stdint.h>
+
 #ifndef MAX
 #define MAX(A, B)               ((A) > (B) ? (A) : (B))
 #endif
@@ -9,7 +11,7 @@
 #define BETWEEN(X, A, B)        ((A) <= (X) && (X) <= (B))
 #define LENGTH(X)               (sizeof (X) / sizeof (X)[0])
 
-static const unsigned long
+static const uint64_t
 	Alpha = 0x1, // enables transparency
 	TopBar = 0x2, // dmenu appears at the top of the screen
 	Centered = 0x4, // dmenu appears in the center of the screen
@@ -82,3 +84,6 @@ int disabled(const long functionality);
 void enablefunc(const long functionality);
 void disablefunc(const long functionality);
 void togglefunc(const long functionality);
+#ifdef __linux__
+size_t strlcpy(char * __restrict dst, const char * __restrict src, size_t dsize);
+#endif /* __linux__ */

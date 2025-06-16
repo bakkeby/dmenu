@@ -1653,7 +1653,7 @@ main(int argc, char *argv[])
 		powerline = PwrlNone;
 
 #ifdef __OpenBSD__
-	if (pledge("stdio rpath", NULL) == -1)
+	if (pledge("stdio rpath wpath cpath", NULL) == -1)
 		die("pledge");
 #endif
 	loadhistory();
