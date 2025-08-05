@@ -101,7 +101,9 @@ static Colormap cmap;
 
 static Drw *drw;
 static Clr *scheme[SchemeLast];
-static Fnt *normal_fonts, *selected_fonts, *output_fonts;
+static Fnt *normal_fonts = NULL;
+static Fnt *selected_fonts = NULL;
+static Fnt *output_fonts = NULL;
 
 static void backspace(const Arg *arg);
 static void complete(const Arg *arg);
@@ -156,6 +158,7 @@ static void updatenumlockmask(void);
 static void usage(FILE *stream);
 
 #include "lib/include.c"
+#include "conf.c"
 
 void
 appenditem(struct item *item, struct item **list, struct item **last)
@@ -208,6 +211,7 @@ cleanup(void)
 {
 	size_t i;
 
+	cleanup_config();
 	XUngrabKeyboard(dpy, CurrentTime);
 	for (i = 0; i < SchemeLast; i++)
 		free(scheme[i]);
@@ -1327,7 +1331,9 @@ main(int argc, char *argv[])
 	char ch;
 	int fast = 0;
 
+	load_config();
 	enablefunc(functionality);
+
 
 	if (disabled(CaseSensitive)) {
 		fstrncmp = strncasecmp;
@@ -1579,11 +1585,11 @@ main(int argc, char *argv[])
 			vertpad = atoi(argv[++i]);
 		/* Color arguments */
 		} else if arg("-fn") { /* font or font set */
-			fonts[0] = argv[++i];
+			drw_font_add(drw, &normal_fonts, argv[++i]);
 		} else if arg("-fns") { /* selected font or font set */
-			selfonts[0] = argv[++i];
+			drw_font_add(drw, &selected_fonts, argv[++i]);
 		} else if arg("-fno") { /* selected font or font set */
-			outfonts[0] = argv[++i];
+			drw_font_add(drw, &output_fonts, argv[++i]);
 		} else if arg("-ab") { /* adjacent background color */
 			colors[SchemeAdjacent][ColBg] = argv[++i];
 		} else if arg("-af") { /* adjacent foreground color */
@@ -1626,23 +1632,28 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (!drw_fontset_create(drw, (const char**)fonts, LENGTH(fonts)))
-		die("no fonts could be loaded.");
-	selected_fonts = output_fonts = normal_fonts = drw->fonts;
+	load_fonts();
 
-	if (selfonts[0]) {
-		if (!drw_fontset_create(drw, (const char**)selfonts, LENGTH(selfonts)))
-			die("no selected fonts could be loaded.");
-		selected_fonts = drw->fonts;
+	/* Fall back to default (hardcoded) config if we have no fonts */
+	if (!normal_fonts) {
+		for (i = 0; i <= LENGTH(fonts); i++)
+			drw_font_add(drw, &normal_fonts, fonts[i]);
+		drw->fonts = normal_fonts;
 	}
 
-	if (outfonts[0]) {
-		if (!drw_fontset_create(drw, (const char**)outfonts, LENGTH(outfonts)))
-			die("no output fonts could be loaded.");
-		output_fonts = drw->fonts;
+	if (!selected_fonts) {
+		for (i = 0; i <= LENGTH(selfonts); i++)
+			drw_font_add(drw, &selected_fonts, selfonts[i]);
+		if (!selected_fonts)
+			selected_fonts = normal_fonts;
 	}
 
-	drw->fonts = normal_fonts;
+	if (!output_fonts) {
+		for (i = 0; i <= LENGTH(outfonts); i++)
+			drw_font_add(drw, &output_fonts, outfonts[i]);
+		if (!output_fonts)
+			output_fonts = normal_fonts;
+	}
 
 	lrpad = drw->fonts->h;
 
