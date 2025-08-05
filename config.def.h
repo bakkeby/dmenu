@@ -53,7 +53,7 @@ static uint64_t functionality = 0
 
 /* Alpha values. You only need to add colour schemes here if you want different levels of
  * transparency per scheme. The default values are defined in the alpha_default array in drw.c. */
-static const unsigned int alphas[SchemeLast][2] = {
+static unsigned int alphas[SchemeLast][2] = {
 	/*               fg      bg   */
 	[SchemeNorm] = { OPAQUE, 0xd0 },
 };
