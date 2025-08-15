@@ -33,7 +33,6 @@ ArgFunc parse_function(const char *string);
 
 void add_key_binding(unsigned int mod, KeySym keysym, ArgFunc function, int argument, void *void_argument, float float_argument);
 
-
 int
 setting_length(const config_setting_t *cfg)
 {
