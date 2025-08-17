@@ -84,6 +84,8 @@ int disabled(const long functionality);
 void enablefunc(const long functionality);
 void disablefunc(const long functionality);
 void togglefunc(const long functionality);
+inline int startswith(const char *needle, const char *haystack);
+
 #ifdef __linux__
 size_t strlcpy(char * __restrict dst, const char * __restrict src, size_t dsize);
 #endif /* __linux__ */

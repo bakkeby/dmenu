@@ -568,16 +568,14 @@ void add_key_binding(
 int
 parse_powerline_string(const char *string)
 {
+	if (startswith("Pwrl", string))
+		string += 4;
+
 	map("None", PwrlNone);
 	map("RightArrow", PwrlRightArrow);
 	map("LeftArrow", PwrlLeftArrow);
 	map("ForwardSlash", PwrlForwardSlash);
 	map("Backslash", PwrlBackslash);
-	map("PwrlNone", PwrlNone);
-	map("PwrlRightArrow", PwrlRightArrow);
-	map("PwrlLeftArrow", PwrlLeftArrow);
-	map("PwrlForwardSlash", PwrlForwardSlash);
-	map("PwrlBackslash", PwrlBackslash);
 
 	fprintf(stderr, "Warning: config could not find powerline option with name %s\n", string);
 	return PwrlNone;
@@ -586,15 +584,8 @@ parse_powerline_string(const char *string)
 int
 parse_scheme(const char *string)
 {
-	map("SchemeNorm", SchemeNorm);
-	map("SchemeSel", SchemeSel);
-	map("SchemeOut", SchemeOut);
-	map("SchemeBorder", SchemeBorder);
-	map("SchemePrompt", SchemePrompt);
-	map("SchemeAdjacent", SchemeAdjacent);
-	map("SchemeSelHighlight", SchemeSelHighlight);
-	map("SchemeNormHighlight", SchemeNormHighlight);
-	map("SchemeHp", SchemeHp);
+	if (startswith("Scheme", string))
+		string += 6;
 
 	map("Norm", SchemeNorm);
 	map("Sel", SchemeSel);
