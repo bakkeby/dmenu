@@ -20,11 +20,8 @@ buttonpress(XEvent *e)
 	if (ev->button == Button3)
 		exit(1);
 
-	if (prompt && *prompt && (!lines || enabled(PromptIndent)))
-		x += promptw;
-
 	/* input field */
-	w = (lines > 0 || !matches) ? mw - x : inputw;
+	w = (lines > 0 || !matches) ? mw : inputw;
 
 	/* left-click on input: clear input,
 	 * NOTE: if there is no left-arrow the space for < is reserved so
@@ -148,11 +145,8 @@ motionevent(XButtonEvent *ev)
 	if (ev->window != win || matches == 0)
 		return;
 
-	if (prompt && *prompt && (!lines || enabled(PromptIndent)))
-		x += promptw;
-
 	if (lines > 0) {
-		w = mw - x;
+		w = mw;
 		for (i = 0, item = curr; item != next; item = item->right, i++) {
 			if (
 				(ev->y >= y + ((i % lines) + 1) * bh) && // line y start

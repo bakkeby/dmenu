@@ -23,7 +23,7 @@ static const uint64_t
 	PrintIndex = 0x100, // makes dmenu print out the 0-based index instead of the matched text itself
 	ShowNumbers = 0x200, // makes dmenu display the number of matched and total items in the top right corner
 	PasswordInput = 0x400, // indicates that the input is a password and should be masked
-	PromptIndent = 0x800, // prevents dmenu from indenting items at the same level as the prompt on multi-line views
+	FuncPlaceholder0x800 = 0x800,
 	InstantReturn = 0x1000, // makes dmenu select an item immediately if there is only one matching option left
 	RestrictReturn = 0x2000, // disables Shift-Return and Ctrl-Return to restrict dmenu to only output one item
 	NoInput = 0x4000, // disables the input field in dmenu, forcing the user to select options using mouse or keyboard
@@ -33,7 +33,7 @@ static const uint64_t
 	ContinuousOutput = 0x40000, // makes dmenu print out selected items immediately rather than at the end
 	FuzzyMatch = 0x80000, // allows fuzzy-matching of items in dmenu
 	PrintInputText = 0x100000, // makes dmenu print the input text instead of the selected item
-	PromptVanish = 0x200000, // makes dmenu hide the prompt when text is entered
+	FuncPlaceholder0x200000 = 0x200000,
 	FuncPlaceholder0x400000 = 0x400000,
 	FuncPlaceholder0x800000 = 0x800000,
 	FuncPlaceholder0x1000000 = 0x1000000,
