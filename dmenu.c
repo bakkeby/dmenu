@@ -348,7 +348,7 @@ drawmenu(void)
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	drw_rect(drw, 0, 0, mw, mh, 1, 1);
 
-	if (prompt_string) {
+	if (text[0] == '\0' && prompt_string) {
 		drw_setscheme(drw, scheme[SchemePrompt]);
 		x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, prompt_string, 0);
 	}
@@ -366,10 +366,12 @@ drawmenu(void)
 		} else
 			drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
 
-		curpos = TEXTW(text) - TEXTW(&text[cursor]);
-		if (hasfocus && (curpos += lrpad / 2 - 1) < w) {
-			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_rect(drw, x + curpos, 2 + (bh-fh)/2, 2, fh - 4, 1, 0);
+		if (disabled(PromptVanish) || text[0] != '\0') {
+			curpos = TEXTW(text) - TEXTW(&text[cursor]);
+			if (hasfocus && (curpos += lrpad / 2 - 1) < w) {
+				drw_setscheme(drw, scheme[SchemeNorm]);
+				drw_rect(drw, x + curpos, 2 + (bh-fh)/2, 2, fh - 4, 1, 0);
+			}
 		}
 	}
 
@@ -379,7 +381,7 @@ drawmenu(void)
 	}
 	if (lines > 0) {
 		/* draw grid */
-		int i = 0, ix = (enabled(PromptIndent) ? x : 0);
+		int i = 0, ix = (enabled(PromptIndent) && disabled(PromptVanish) ? x : 0);
 		if (columns) {
 			for (item = curr; item != next; item = item->right, i++) {
 				drawitem(
@@ -1326,6 +1328,8 @@ usage(FILE *stream)
 	fprintf(stream, ofmt, "    -NoPrintInputText", "dmenu to print the text of the selected item", disabled(PrintInputText) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -PromptIndent", "makes dmenu indent items at the same level as the prompt on multi-line views", enabled(PromptIndent) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -NoPromptIndent", "items on multi-line views are not indented", disabled(PromptIndent) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -PromptVanish", "makes the prompt show initially, but disappear when text is entered", enabled(PromptVanish) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoPromptVanish", "prompt, if used, is always displayed", disabled(PromptVanish) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -ShowNumbers", "makes dmenu display the number of matched and total items in the top right corner", enabled(ShowNumbers) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -NoShowNumbers", "dmenu will not show item count", disabled(ShowNumbers) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -Xresources", "makes dmenu read X resources at startup", enabled(Xresources) ? " (default)" : "");
@@ -1537,6 +1541,10 @@ main(int argc, char *argv[])
 			enablefunc(PromptIndent);
 		} else if arg("-NoPromptIndent") {
 			disablefunc(PromptIndent);
+		} else if arg("-PromptVanish") {
+			enablefunc(PromptVanish);
+		} else if arg("-NoPromptVanish") {
+			disablefunc(PromptVanish);
 		} else if arg("-ShowNumbers") {
 			enablefunc(ShowNumbers);
 		} else if arg("-NoShowNumbers") {

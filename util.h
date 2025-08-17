@@ -33,7 +33,7 @@ static const uint64_t
 	ContinuousOutput = 0x40000, // makes dmenu print out selected items immediately rather than at the end
 	FuzzyMatch = 0x80000, // allows fuzzy-matching of items in dmenu
 	PrintInputText = 0x100000, // makes dmenu print the input text instead of the selected item
-	FuncPlaceholder0x200000 = 0x200000,
+	PromptVanish = 0x200000, // makes dmenu hide the prompt when text is entered
 	FuncPlaceholder0x400000 = 0x400000,
 	FuncPlaceholder0x800000 = 0x800000,
 	FuncPlaceholder0x1000000 = 0x1000000,

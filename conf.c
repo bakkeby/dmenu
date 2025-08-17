@@ -376,6 +376,7 @@ load_functionality(void)
 	readfunc(PrintIndex);
 	readfunc(PrintInputText);
 	readfunc(PromptIndent);
+	readfunc(PromptVanish);
 	readfunc(RejectNoMatch);
 	readfunc(RestrictReturn);
 	readfunc(ShowNumbers);
