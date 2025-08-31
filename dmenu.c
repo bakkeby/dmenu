@@ -166,6 +166,7 @@ static void setup(void);
 static unsigned int textw_clamp(const char *str, unsigned int n);
 static void updatenumlockmask(void);
 static void usage(FILE *stream);
+static inline int startswith(const char *needle, const char *haystack);
 
 #include "lib/include.c"
 #include "conf.c"
@@ -365,7 +366,7 @@ drawmenu(void)
 			drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
 		}
 
-		if (text[0] != '\0') {
+		if (!prompt_string || text[0] != '\0') {
 			curpos = TEXTW(text) - TEXTW(&text[cursor]);
 			if (hasfocus && (curpos += lrpad / 2 - 2) < w) {
 				drw_setscheme(drw, scheme[SchemeNorm]);
@@ -826,6 +827,12 @@ selectandexit(const Arg *arg)
 	}
 	cleanup();
 	exit(0);
+}
+
+inline int
+startswith(const char *needle, const char *haystack)
+{
+	return !strncmp(haystack, needle, strlen(needle));
 }
 
 int

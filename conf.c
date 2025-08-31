@@ -348,7 +348,7 @@ load_powerline()
 	}
 }
 
-#define readfunc(F) if (config_lookup_sloppy_bool(&cfg, "functionality." #F, &enabled)) { if (enabled) { enablefunc(F); } else { disablefunc(F); } }
+#define readfunc(F) if (config_lookup_sloppy_bool(&cfg, "functionality." #F, &enabled)) { enabled ? enablefunc(F) : disablefunc(F); }
 
 void
 load_functionality(void)

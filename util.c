@@ -67,11 +67,6 @@ togglefunc(const long functionality)
 	settings ^= functionality;
 }
 
-inline int startswith(const char *needle, const char *haystack)
-{
-	return !strncmp(haystack, needle, strlen(needle));
-}
-
 #ifdef __linux__
 /*
  * Copy string src to buffer dst of size dsize.  At most dsize-1
