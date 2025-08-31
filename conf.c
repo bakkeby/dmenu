@@ -388,7 +388,7 @@ load_functionality(void)
 void
 load_colors(void)
 {
-	int i, num_cols;
+	int i, s, num_cols;
 	const char *string;
 	config_setting_t *cols, *c;
 
@@ -403,7 +403,7 @@ load_colors(void)
 	/* Parse and set the colors based on config */
 	for (i = 0; i < num_cols; i++) {
 		c = config_setting_get_elem(cols, i);
-		int s = parse_scheme(config_setting_name(c));
+		s = parse_scheme(config_setting_name(c));
 
 		if (!scheme[s][ColFg].pixel && config_setting_lookup_string(c, "fg", &string))
 			drw_clr_create(drw, &scheme[s][ColFg], string, alphas[s][ColFg]);
@@ -416,7 +416,7 @@ load_colors(void)
 void
 load_alphas(void)
 {
-	int i, num_alphas;
+	int i, s, num_alphas;
 	config_setting_t *alpha_t, *a;
 
 	alpha_t = config_lookup(&cfg, "alphas");
@@ -430,7 +430,7 @@ load_alphas(void)
 	/* Parse and set the colors based on config */
 	for (i = 0; i < num_alphas; i++) {
 		a = config_setting_get_elem(alpha_t, i);
-		int s = parse_scheme(config_setting_name(a));
+		s = parse_scheme(config_setting_name(a));
 
 		config_setting_lookup_unsigned_int(a, "fg", &alphas[s][ColFg]);
 		config_setting_lookup_unsigned_int(a, "bg", &alphas[s][ColBg]);
