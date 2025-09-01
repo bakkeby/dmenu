@@ -60,11 +60,13 @@ typedef union {
 	const void *v;
 } Arg;
 
+typedef void (*ArgFunc)(const Arg *);
+
 typedef struct {
 	unsigned int mod;
 	KeySym keysym;
 	void (*func)(const Arg *);
-	const Arg arg;
+	Arg arg;
 } Key;
 
 static char text[BUFSIZ] = "";
@@ -88,6 +90,11 @@ static unsigned int selidsize = 0;
 static unsigned int preselected = 0;
 static unsigned int double_print = 0;
 
+static char *left_symbol = NULL;
+static char *right_symbol = NULL;
+static char censored_symbol = '\0';
+static char *prompt_string = NULL;
+
 static Atom clip, utf8;
 static Atom type, dock;
 static Display *dpy;
@@ -101,7 +108,12 @@ static Colormap cmap;
 
 static Drw *drw;
 static Clr *scheme[SchemeLast];
-static Fnt *normal_fonts, *selected_fonts, *output_fonts;
+static Fnt *normal_fonts = NULL;
+static Fnt *selected_fonts = NULL;
+static Fnt *output_fonts = NULL;
+static char *word_delimiters = NULL;
+static Key *keybindings = NULL;
+static int num_keybindings;
 
 static void backspace(const Arg *arg);
 static void complete(const Arg *arg);
@@ -154,8 +166,10 @@ static void setup(void);
 static unsigned int textw_clamp(const char *str, unsigned int n);
 static void updatenumlockmask(void);
 static void usage(FILE *stream);
+static inline int startswith(const char *needle, const char *haystack);
 
 #include "lib/include.c"
+#include "conf.c"
 
 void
 appenditem(struct item *item, struct item **list, struct item **last)
@@ -187,13 +201,12 @@ calcoffsets(void)
 	if (enabled(ShowNumbers))
 		rpad = TEXTW(numbers);
 
-	if (lines > 0)
-		if (columns)
-			n = lines * columns * bh;
-		else
-			n = lines * bh;
-	else
-		n = mw - (promptw + inputw + TEXTW(lsymbol) + TEXTW(rsymbol) + rpad);
+	if (lines > 0) {
+		n = lines * bh * MAX(columns, 1);
+	} else {
+		n = mw - (inputw + TEXTW(left_symbol) + TEXTW(right_symbol) + rpad);
+	}
+
 	/* calculate which items will begin the next page and previous page */
 	for (i = 0, next = curr; next; next = next->right)
 		if ((i += (lines > 0) ? bh : textw_clamp(next->text, n)) > n)
@@ -208,12 +221,19 @@ cleanup(void)
 {
 	size_t i;
 
+	cleanup_config();
 	XUngrabKeyboard(dpy, CurrentTime);
 	for (i = 0; i < SchemeLast; i++)
 		free(scheme[i]);
 	for (i = 0; items && items[i].text; ++i)
 		free(separator_reverse ? items[i].text_output : items[i].text);
+	if (keybindings != keys)
+		free(keybindings);
+	free(left_symbol);
+	free(right_symbol);
+	free(prompt_string);
 	free(items);
+	free(word_delimiters);
 	free(hpitems);
 	drw_free(drw);
 	XSync(dpy, False);
@@ -267,9 +287,9 @@ deleteright(const Arg *arg) {
 
 void
 deleteword(const Arg *arg) {
-	while (cursor > 0 && strchr(worddelimiters, text[nextrune(-1)]))
+	while (cursor > 0 && strchr(word_delimiters, text[nextrune(-1)]))
 		insert(NULL, nextrune(-1) - cursor);
-	while (cursor > 0 && !strchr(worddelimiters, text[nextrune(-1)]))
+	while (cursor > 0 && !strchr(word_delimiters, text[nextrune(-1)]))
 		insert(NULL, nextrune(-1) - cursor);
 }
 
@@ -328,29 +348,34 @@ drawmenu(void)
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	drw_rect(drw, 0, 0, mw, mh, 1, 1);
 
-	if (prompt && *prompt) {
-		drw_setscheme(drw, scheme[SchemePrompt]);
-		x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, prompt, 0);
-	}
-
 	if (disabled(NoInput)) {
 		/* draw input field */
-		w = (lines > 0 || !matches) ? mw - x : inputw;
+		w = (lines > 0 || !matches) ? mw : inputw;
 
-		drw_setscheme(drw, scheme[SchemeNorm]);
-		if (enabled(PasswordInput)) {
+		if (prompt_string && text[0] == '\0') {
+			drw_setscheme(drw, scheme[SchemePrompt]);
+			drw_text(drw, x, 0, (lines ? w : promptw), bh, lrpad / 2, prompt_string, 0);
+		} else if (enabled(PasswordInput)) {
+			drw_setscheme(drw, scheme[SchemeNorm]);
 			censort = ecalloc(1, sizeof(text));
-			memset(censort, csymbol, strlen(text));
+			memset(censort, censored_symbol, strlen(text));
 			drw_text(drw, x, 0, w, bh, lrpad / 2, censort, 0);
 			free(censort);
-		} else
-			drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
-
-		curpos = TEXTW(text) - TEXTW(&text[cursor]);
-		if (hasfocus && (curpos += lrpad / 2 - 1) < w) {
+		} else {
 			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_rect(drw, x + curpos, 2 + (bh-fh)/2, 2, fh - 4, 1, 0);
+			drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
 		}
+
+		if (!prompt_string || text[0] != '\0') {
+			curpos = TEXTW(text) - TEXTW(&text[cursor]);
+			if (hasfocus && (curpos += lrpad / 2 - 2) < w) {
+				drw_setscheme(drw, scheme[SchemeNorm]);
+				drw_rect(drw, x + curpos + 4, 1 + (bh-fh)/2, 2, fh - 2, 1, 0);
+			}
+		}
+	} else if (prompt_string) {
+		drw_setscheme(drw, scheme[SchemePrompt]);
+		x = drw_text(drw, x, 0, mw, bh, lrpad / 2, prompt_string, 0);
 	}
 
 	if (enabled(ShowNumbers)) {
@@ -359,7 +384,7 @@ drawmenu(void)
 	}
 	if (lines > 0) {
 		/* draw grid */
-		int i = 0, ix = (enabled(PromptIndent) ? x : 0);
+		int i = 0, ix = 0;
 		if (columns) {
 			for (item = curr; item != next; item = item->right, i++) {
 				drawitem(
@@ -392,14 +417,14 @@ drawmenu(void)
 	} else if (matches) {
 		/* draw horizontal list */
 		x += inputw;
-		w = TEXTW(lsymbol);
+		w = TEXTW(left_symbol);
 		if (curr->left) {
 			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_text(drw, x, 0, w, bh, lrpad / 2, lsymbol, 0);
+			drw_text(drw, x, 0, w, bh, lrpad / 2, left_symbol, 0);
 		}
 		x += w;
 		for (item = curr; item != next; item = item->right) {
-			stw = TEXTW(rsymbol);
+			stw = TEXTW(right_symbol);
 			itw = textw_clamp(item->text, mw - x - stw - rpad);
 			x = drawitem(item, x, 0, itw);
 			if (powerline && prev != NULL) {
@@ -417,9 +442,9 @@ drawmenu(void)
 			prev = item;
 		}
 		if (next) {
-			w = TEXTW(rsymbol);
+			w = TEXTW(right_symbol);
 			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_text(drw, mw - w - rpad, 0, w, bh, lrpad / 2, rsymbol, 0);
+			drw_text(drw, mw - w - rpad, 0, w, bh, lrpad / 2, right_symbol, 0);
 		}
 	}
 	if (enabled(ShowNumbers)) {
@@ -526,14 +551,14 @@ void
 movewordedge(const Arg *arg)
 {
 	if (arg->i < 0) { /* move cursor to the start of the word*/
-		while (cursor > 0 && strchr(worddelimiters, text[nextrune(-1)]))
+		while (cursor > 0 && strchr(word_delimiters, text[nextrune(-1)]))
 			cursor = nextrune(-1);
-		while (cursor > 0 && !strchr(worddelimiters, text[nextrune(-1)]))
+		while (cursor > 0 && !strchr(word_delimiters, text[nextrune(-1)]))
 			cursor = nextrune(-1);
 	} else { /* move cursor to the end of the word */
-		while (text[cursor] && strchr(worddelimiters, text[cursor]))
+		while (text[cursor] && strchr(word_delimiters, text[cursor]))
 			cursor = nextrune(+1);
-		while (text[cursor] && !strchr(worddelimiters, text[cursor]))
+		while (text[cursor] && !strchr(word_delimiters, text[cursor]))
 			cursor = nextrune(+1);
 	}
 }
@@ -692,12 +717,12 @@ keypress(XEvent *e)
 	len = XmbLookupString(xic, ev, buf, sizeof buf, &ksym, &status);
 	keysym = XGetKeyboardMapping(dpy, (KeyCode)ev->keycode, 1, &keysyms_return);
 
-	for (i = 0; i < LENGTH(keys); i++) {
-		n = (keys[i].keysym >= XK_KP_Home && keys[i].keysym <= XK_KP_Delete ? 0 : numlockmask);
-		if (*keysym == keys[i].keysym
-				&& CLEANMASK(keys[i].mod, n) == CLEANMASK(ev->state, n)
-				&& keys[i].func) {
-			keys[i].func(&(keys[i].arg));
+	for (i = 0; i < num_keybindings; i++) {
+		n = (keybindings[i].keysym >= XK_KP_Home && keybindings[i].keysym <= XK_KP_Delete ? 0 : numlockmask);
+		if (*keysym == keybindings[i].keysym
+				&& CLEANMASK(keybindings[i].mod, n) == CLEANMASK(ev->state, n)
+				&& keybindings[i].func) {
+			keybindings[i].func(&(keybindings[i].arg));
 			keybind_found = 1;
 		}
 	}
@@ -802,6 +827,12 @@ selectandexit(const Arg *arg)
 	}
 	cleanup();
 	exit(0);
+}
+
+inline int
+startswith(const char *needle, const char *haystack)
+{
+	return !strncmp(haystack, needle, strlen(needle));
 }
 
 int
@@ -978,10 +1009,6 @@ setup(void)
 	int a, di, n, area = 0;
 #endif
 
-	/* init appearance */
-	for (j = 0; j < SchemeLast; j++)
-		scheme[j] = drw_scm_create(drw, (const char**)colors[j], alphas[j], 2);
-
 	clip = XInternAtom(dpy, "CLIPBOARD",   False);
 	utf8 = XInternAtom(dpy, "UTF8_STRING", False);
 	type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
@@ -1034,7 +1061,7 @@ setup(void)
 	bh = MAX(drw->fonts->h + 2, lineheight);
 	lines = MAX(lines, 0);
 	mh = (lines + 1) * bh;
-	promptw = (prompt && *prompt) ? TEXTW(prompt) : 0;
+	promptw = (prompt_string ? TEXTW(prompt_string) : 0);
  	max_h = height - vertpad * 2 - border_width * 2;
  	max_w = width - sidepad * 2;
 
@@ -1059,13 +1086,11 @@ setup(void)
 		dmw = MIN(MAX(max_textw() + promptw, dmw), max_w);
 
 	mw = dmw - border_width * 2;
-	if (enabled(NoInput) && lines) {
-		if (!promptw) {
-			mh -= bh;
-		} else {
-			promptw = mw;
-		}
-	}
+	if (enabled(NoInput) && lines && !promptw)
+		mh -= bh;
+
+	if (enabled(PasswordInput) && lines && promptw)
+		promptw = mw;
 
 	if (dmxp != ~0)
 		dmx = sidepad + (max_w - dmw) * dmxp / 100;
@@ -1128,7 +1153,7 @@ setup(void)
 
 	if (enabled(Managed)) {
 		XTextProperty prop;
-		char *windowtitle = prompt != NULL ? prompt : "dmenu";
+		char *windowtitle = (prompt_string != NULL ? prompt_string : "dmenu");
 		Xutf8TextListToTextProperty(dpy, &windowtitle, 1, XUTF8StringStyle, &prop);
 		XSetWMName(dpy, win, &prop);
 		XSetTextProperty(dpy, win, &prop, XInternAtom(dpy, "_NET_WM_NAME", False));
@@ -1308,8 +1333,6 @@ usage(FILE *stream)
 	fprintf(stream, ofmt, "    -NoManaged", "dmenu manages itself, window manager not to interfere", disabled(Managed) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -PrintInputText", "makes dmenu print the input text instead of the selected item", enabled(PrintInputText) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -NoPrintInputText", "dmenu to print the text of the selected item", disabled(PrintInputText) ? " (default)" : "");
-	fprintf(stream, ofmt, "    -PromptIndent", "makes dmenu indent items at the same level as the prompt on multi-line views", enabled(PromptIndent) ? " (default)" : "");
-	fprintf(stream, ofmt, "    -NoPromptIndent", "items on multi-line views are not indented", disabled(PromptIndent) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -ShowNumbers", "makes dmenu display the number of matched and total items in the top right corner", enabled(ShowNumbers) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -NoShowNumbers", "dmenu will not show item count", disabled(ShowNumbers) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -Xresources", "makes dmenu read X resources at startup", enabled(Xresources) ? " (default)" : "");
@@ -1323,11 +1346,14 @@ int
 main(int argc, char *argv[])
 {
 	XWindowAttributes wa;
-	int i, val;
+	int i, s, val;
 	char ch;
 	int fast = 0;
 
-	enablefunc(functionality);
+	load_config();
+	load_functionality();
+	load_alphas();
+	load_settings();
 
 	if (disabled(CaseSensitive)) {
 		fstrncmp = strncasecmp;
@@ -1392,10 +1418,9 @@ main(int argc, char *argv[])
 	xinitvisual();
 	drw = drw_create(dpy, screen, root, wa.width, wa.height, visual, depth, cmap);
 
-	/* X resources are loaded before the rest of the parameter are read. This is
-	 * to allow for command line arguments to override the X resource colours. */
-	if (enabled(Xresources))
-		readxresources();
+	/* Allocate space for the colour scheme array */
+	for (i = 0; i < SchemeLast; i++)
+		scheme[i] = ecalloc(2, sizeof(XftColor));
 
 	/* Parse remaining options */
 	for (i = 1; i < argc; i++) {
@@ -1515,10 +1540,6 @@ main(int argc, char *argv[])
 			enablefunc(PrintInputText);
 		} else if arg("-NoPrintInputText") {
 			disablefunc(PrintInputText);
-		} else if arg("-PromptIndent") {
-			enablefunc(PromptIndent);
-		} else if arg("-NoPromptIndent") {
-			disablefunc(PromptIndent);
 		} else if arg("-ShowNumbers") {
 			enablefunc(ShowNumbers);
 		} else if arg("-NoShowNumbers") {
@@ -1561,7 +1582,7 @@ main(int argc, char *argv[])
 		} else if arg("-H") {
 			histfile = argv[++i];
 		} else if (arg("-p") || arg("-prompt")) { /* adds prompt to left of input field */
-			prompt = argv[++i];
+			prompt_string = strdup(argv[++i]);
 		} else if arg("-h") { /* minimum height of one menu line */
 			lineheight = atoi(argv[++i]);
 		} else if arg("-it") { /* initial text */
@@ -1579,70 +1600,109 @@ main(int argc, char *argv[])
 			vertpad = atoi(argv[++i]);
 		/* Color arguments */
 		} else if arg("-fn") { /* font or font set */
-			fonts[0] = argv[++i];
+			drw_font_add(drw, &normal_fonts, argv[++i]);
 		} else if arg("-fns") { /* selected font or font set */
-			selfonts[0] = argv[++i];
+			drw_font_add(drw, &selected_fonts, argv[++i]);
 		} else if arg("-fno") { /* selected font or font set */
-			outfonts[0] = argv[++i];
+			drw_font_add(drw, &output_fonts, argv[++i]);
 		} else if arg("-ab") { /* adjacent background color */
-			colors[SchemeAdjacent][ColBg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeAdjacent][ColBg], argv[++i], alphas[SchemeAdjacent][ColBg]);
 		} else if arg("-af") { /* adjacent foreground color */
-			colors[SchemeAdjacent][ColFg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeAdjacent][ColFg], argv[++i], alphas[SchemeAdjacent][ColFg]);
 		} else if arg("-bb") { /* border background color */
-			colors[SchemeBorder][ColBg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeBorder][ColBg], argv[++i], alphas[SchemeBorder][ColBg]);
 		} else if arg("-bf") { /* border foreground color */
-			colors[SchemeBorder][ColFg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeBorder][ColFg], argv[++i], alphas[SchemeBorder][ColFg]);
 		} else if arg("-nb") { /* normal background color */
-			colors[SchemeNorm][ColBg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeNorm][ColBg], argv[++i], alphas[SchemeNorm][ColBg]);
 		} else if arg("-nf") { /* normal foreground color */
-			colors[SchemeNorm][ColFg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeNorm][ColFg], argv[++i], alphas[SchemeNorm][ColFg]);
 		} else if arg("-ob") { /* out(put) background color */
-			colors[SchemeOut][ColBg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeOut][ColBg], argv[++i], alphas[SchemeOut][ColBg]);
 		} else if arg("-of") { /* out(put) foreground color */
-			colors[SchemeOut][ColFg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeOut][ColFg], argv[++i], alphas[SchemeOut][ColFg]);
 		} else if arg("-sb") { /* selected background color */
-			colors[SchemeSel][ColBg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeSel][ColBg], argv[++i], alphas[SchemeSel][ColBg]);
 		} else if arg("-sf") { /* selected foreground color */
-			colors[SchemeSel][ColFg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeSel][ColFg], argv[++i], alphas[SchemeSel][ColFg]);
 		} else if arg("-pb") { /* prompt background color */
-			colors[SchemePrompt][ColBg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemePrompt][ColBg], argv[++i], alphas[SchemePrompt][ColBg]);
 		} else if arg("-pf") { /* prompt foreground color */
-			colors[SchemePrompt][ColFg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemePrompt][ColFg], argv[++i], alphas[SchemePrompt][ColFg]);
 		} else if arg("-hb") { /* high priority background color */
-			colors[SchemeHp][ColBg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeHp][ColBg], argv[++i], alphas[SchemeHp][ColBg]);
 		} else if arg("-hf") { /* high priority foreground color */
-			colors[SchemeHp][ColFg] = argv[++i];
-		} else if arg("-nhb") { /* normal hi background color */
-			colors[SchemeNormHighlight][ColBg] = argv[++i];
-		} else if arg("-nhf") { /* normal hi foreground color */
-			colors[SchemeNormHighlight][ColFg] = argv[++i];
-		} else if arg("-shb") { /* selected hi background color */
-			colors[SchemeSelHighlight][ColBg] = argv[++i];
-		} else if arg("-shf") { /* selected hi foreground color */
-			colors[SchemeSelHighlight][ColFg] = argv[++i];
+			drw_clr_create(drw, &scheme[SchemeHp][ColFg], argv[++i], alphas[SchemeHp][ColFg]);
+		} else if arg("-nhb") { /* normal highlight background color */
+			drw_clr_create(drw, &scheme[SchemeNormHighlight][ColBg], argv[++i], alphas[SchemeNormHighlight][ColBg]);
+		} else if arg("-nhf") { /* normal highlight foreground color */
+			drw_clr_create(drw, &scheme[SchemeNormHighlight][ColFg], argv[++i], alphas[SchemeNormHighlight][ColFg]);
+		} else if arg("-shb") { /* selected highlight background color */
+			drw_clr_create(drw, &scheme[SchemeSelHighlight][ColBg], argv[++i], alphas[SchemeSelHighlight][ColBg]);
+		} else if arg("-shf") { /* selected highlight foreground color */
+			drw_clr_create(drw, &scheme[SchemeSelHighlight][ColFg], argv[++i], alphas[SchemeSelHighlight][ColFg]);
 		} else { /* a catch all for any argument that is not recognised */
 			usage(stderr);
 			exit(1);
 		}
 	}
 
-	if (!drw_fontset_create(drw, (const char**)fonts, LENGTH(fonts)))
-		die("no fonts could be loaded.");
-	selected_fonts = output_fonts = normal_fonts = drw->fonts;
+	/* Command line arguments take precedence over X resource colours */
+	if (enabled(Xresources))
+		readxresources();
 
-	if (selfonts[0]) {
-		if (!drw_fontset_create(drw, (const char**)selfonts, LENGTH(selfonts)))
-			die("no selected fonts could be loaded.");
-		selected_fonts = drw->fonts;
+	load_fonts();
+	load_colors();
+	load_keybindings();
+	load_misc_configs();
+
+	/* Fall back to default (hardcoded) config settings are missing */
+	if (!keybindings) {
+		keybindings = keys;
+		num_keybindings = LENGTH(keys);
 	}
 
-	if (outfonts[0]) {
-		if (!drw_fontset_create(drw, (const char**)outfonts, LENGTH(outfonts)))
-			die("no output fonts could be loaded.");
-		output_fonts = drw->fonts;
+	if (!left_symbol && lsymbol)
+		left_symbol = strdup(lsymbol);
+	if (!right_symbol && rsymbol)
+		right_symbol = strdup(rsymbol);
+	if (censored_symbol == '\0')
+		censored_symbol = csymbol;
+	if (!prompt_string && prompt)
+		prompt_string = strdup(prompt);
+
+	if (!normal_fonts) {
+		for (i = 0; i < LENGTH(fonts); i++)
+			drw_font_add(drw, &normal_fonts, fonts[i]);
+	}
+
+	if (!selected_fonts) {
+		for (i = 0; i < LENGTH(selfonts); i++)
+			drw_font_add(drw, &selected_fonts, selfonts[i]);
+		if (!selected_fonts)
+			selected_fonts = normal_fonts;
+	}
+
+	if (!output_fonts) {
+		for (i = 0; i < LENGTH(outfonts); i++)
+			drw_font_add(drw, &output_fonts, outfonts[i]);
+		if (!output_fonts)
+			output_fonts = normal_fonts;
 	}
 
 	drw->fonts = normal_fonts;
+
+	if (!word_delimiters)
+		word_delimiters = strdup(worddelimiters);
+
+	/* Generate remaining colours from default config */
+	for (s = 0; s < SchemeLast; s++) {
+		for (i = 0; i < 2; i++) {
+			if (!scheme[s][i].pixel) {
+				drw_clr_create(drw, &scheme[s][i], colors[s][i], alphas[s][i]);
+			}
+		}
+	}
 
 	lrpad = drw->fonts->h;
 

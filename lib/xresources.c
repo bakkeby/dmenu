@@ -15,23 +15,30 @@ readxresources(void)
 		XrmDatabase xdb = XrmGetStringDatabase(xrm);
 		XrmValue xval;
 
-		if (XrmGetResource(xdb, "dmenu.font", "*", &type, &xval))
-			fonts[0] = strdup(xval.addr);
+		if (!normal_fonts && XrmGetResource(xdb, "dmenu.font", "*", &type, &xval)) {
+			drw_font_add(drw, &normal_fonts, xval.addr);
+		}
 
-		if (XrmGetResource(xdb, "dmenu.selfont", "*", &type, &xval))
-			selfonts[0] = strdup(xval.addr);
+		if (!selected_fonts && XrmGetResource(xdb, "dmenu.selfont", "*", &type, &xval)) {
+			drw_font_add(drw, &selected_fonts, xval.addr);
+		}
 
-		if (XrmGetResource(xdb, "dmenu.outfont", "*", &type, &xval))
-			outfonts[0] = strdup(xval.addr);
+		if (!output_fonts && XrmGetResource(xdb, "dmenu.outfont", "*", &type, &xval)) {
+			drw_font_add(drw, &output_fonts, xval.addr);
+		}
 
 		for (s = 0; s < SchemeLast; s++) {
-			snprintf(resource, len, pattern, colors[s][ColResource], "fg");
-			if (XrmGetResource(xdb, resource, "*", &type, &xval))
-				colors[s][ColFg] = strdup(xval.addr);
+			if (!scheme[s][ColFg].pixel) {
+				snprintf(resource, len, pattern, colors[s][ColResource], "fg");
+				if (XrmGetResource(xdb, resource, "*", &type, &xval))
+					drw_clr_create(drw, &scheme[s][ColFg], xval.addr, alphas[s][ColFg]);
+			}
 
-			snprintf(resource, len, pattern, colors[s][ColResource], "bg");
-			if (XrmGetResource(xdb, resource, "*", &type, &xval))
-				colors[s][ColBg] = strdup(xval.addr);
+			if (!scheme[s][ColBg].pixel) {
+				snprintf(resource, len, pattern, colors[s][ColResource], "bg");
+				if (XrmGetResource(xdb, resource, "*", &type, &xval))
+					drw_clr_create(drw, &scheme[s][ColBg], xval.addr, alphas[s][ColBg]);
+			}
 		}
 
 		XrmDestroyDatabase(xdb);

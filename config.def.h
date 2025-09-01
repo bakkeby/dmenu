@@ -42,7 +42,6 @@ static uint64_t functionality = 0
 //	|PasswordInput // indicates that the input is a password and should be masked
 //	|PrintIndex // makes dmenu print out the 0-based index instead of the matched text itself
 //	|PrintInputText // makes dmenu print the input text instead of the selected item
-	|PromptIndent // makes dmenu indent items at the same level as the prompt on multi-line views
 //	|RejectNoMatch // makes dmenu reject input if it would result in no matching item
 //	|RestrictReturn // disables Shift-Return and Ctrl-Return to restrict dmenu to only output one item
 //	|ShowNumbers // makes dmenu display the number of matched and total items in the top right corner
@@ -53,7 +52,7 @@ static uint64_t functionality = 0
 
 /* Alpha values. You only need to add colour schemes here if you want different levels of
  * transparency per scheme. The default values are defined in the alpha_default array in drw.c. */
-static const unsigned int alphas[SchemeLast][2] = {
+static unsigned int alphas[SchemeLast][2] = {
 	/*               fg      bg   */
 	[SchemeNorm] = { OPAQUE, 0xd0 },
 };
