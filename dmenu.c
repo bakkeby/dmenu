@@ -348,11 +348,19 @@ drawmenu(void)
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	drw_rect(drw, 0, 0, mw, mh, 1, 1);
 
+
+	/* Always show prompt if we have no items to list */
+	if (prompt_string && items == NULL) {
+		drw_setscheme(drw, scheme[SchemePrompt]);
+		x = drw_text(drw, x, 0, mw, bh, lrpad / 2, prompt_string, 0);
+	}
+
 	if (disabled(NoInput)) {
 		/* draw input field */
-		w = (lines > 0 || !matches) ? mw : inputw;
+		w = (lines > 0 || !matches) ? mw - x : inputw;
 
-		if (prompt_string && text[0] == '\0') {
+		/* Temorary prompt, shown only while there is input */
+		if (prompt_string && text[0] == '\0' && items != NULL) {
 			drw_setscheme(drw, scheme[SchemePrompt]);
 			drw_text(drw, x, 0, (lines ? w : promptw), bh, lrpad / 2, prompt_string, 0);
 		} else if (enabled(PasswordInput)) {
@@ -366,16 +374,13 @@ drawmenu(void)
 			drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
 		}
 
-		if (!prompt_string || text[0] != '\0') {
+		if (!prompt_string || text[0] != '\0' || items == NULL) {
 			curpos = TEXTW(text) - TEXTW(&text[cursor]);
 			if (hasfocus && (curpos += lrpad / 2 - 2) < w) {
 				drw_setscheme(drw, scheme[SchemeNorm]);
 				drw_rect(drw, x + curpos + 4, 1 + (bh-fh)/2, 2, fh - 2, 1, 0);
 			}
 		}
-	} else if (prompt_string) {
-		drw_setscheme(drw, scheme[SchemePrompt]);
-		x = drw_text(drw, x, 0, mw, bh, lrpad / 2, prompt_string, 0);
 	}
 
 	if (enabled(ShowNumbers)) {
