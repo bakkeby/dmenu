@@ -225,8 +225,7 @@ drw_clr_create(Drw *drw, Clr *dest, const char *clrname, unsigned int alpha)
 	dest->pixel = (dest->pixel & 0x00ffffffU) | (alpha << 24);
 }
 
-/* Wrapper to create color schemes. The caller has to call free(3) on the
- * returned color scheme when done using it. */
+/* Create color schemes. */
 Clr *
 drw_scm_create(
 	Drw *drw,
@@ -236,18 +235,42 @@ drw_scm_create(
 ) {
 	int hasalpha = 0;
 	size_t i;
-	Clr *ret;
+	Clr *scm;
 
 	/* need at least two colors for a scheme */
-	if (!drw || !clrnames || clrcount < 2 || !(ret = ecalloc(clrcount, sizeof(XftColor))))
+	if (!drw || !clrnames || clrcount < 2 || !(scm = ecalloc(clrcount, sizeof(Clr))))
 		return NULL;
 
 	for (i = 0; i < clrcount; i++)
 		hasalpha |= alphas[i];
 
 	for (i = 0; i < clrcount; i++)
-		drw_clr_create(drw, &ret[i], clrnames[i], hasalpha ? alphas[i] : alpha_default[i]);
-	return ret;
+		drw_clr_create(drw, &scm[i], clrnames[i], hasalpha ? alphas[i] : alpha_default[i]);
+	return scm;
+}
+
+void
+drw_clr_free(Drw *drw, Clr *c)
+{
+	if (!drw || !c)
+		return;
+
+	/* c is typedef XftColor Clr */
+	XftColorFree(drw->dpy, DefaultVisual(drw->dpy, drw->screen),
+	             DefaultColormap(drw->dpy, drw->screen), c);
+}
+
+void
+drw_scm_free(Drw *drw, Clr *scm, size_t clrcount)
+{
+	size_t i;
+
+	if (!drw || !scm)
+		return;
+
+	for (i = 0; i < clrcount; i++)
+		drw_clr_free(drw, &scm[i]);
+	free(scm);
 }
 
 void

@@ -48,6 +48,8 @@ unsigned int drw_fontset_getwidth_clamp(Drw *drw, const char *text, unsigned int
 /* Colorscheme abstraction */
 void drw_clr_create(Drw *drw, Clr *dest, const char *clrname, unsigned int alpha);
 Clr *drw_scm_create(Drw *drw, const char *clrnames[], const unsigned int alphas[], size_t clrcount);
+void drw_clr_free(Drw *drw, Clr *c);
+void drw_scm_free(Drw *drw, Clr *scm, size_t clrcount);
 
 /* Cursor abstraction */
 Cur *drw_cur_create(Drw *drw, int shape);
