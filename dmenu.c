@@ -352,7 +352,7 @@ drawmenu(void)
 	/* Always show prompt if we have no items to list */
 	if (prompt_string && items == NULL) {
 		drw_setscheme(drw, scheme[SchemePrompt]);
-		x = drw_text(drw, x, 0, mw, bh, lrpad / 2, prompt_string, 0);
+		x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, prompt_string, 0);
 	}
 
 	if (disabled(NoInput)) {
