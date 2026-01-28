@@ -620,6 +620,7 @@ parse_function(const char *string)
 	map("moveleft", moveleft);
 	map("moveright", moveright);
 	map("navhistory", navhistory);
+	map("searchnavhistory", searchnavhistory);
 	map("paste", paste);
 	map("quit", quit);
 	map("selectandresume", selectandresume);

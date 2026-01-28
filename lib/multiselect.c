@@ -1,4 +1,4 @@
-static int
+int
 issel(size_t id)
 {
 	for (int i = 0; i < selidsize; i++)
@@ -7,57 +7,67 @@ issel(size_t id)
 	return 0;
 }
 
-static void
-printsel(void)
-{
-	for (int i = 0; i < selidsize; i++) {
-		if (selid[i] != -1 && (!sel || sel->id != selid[i])) {
-			if (enabled(PrintIndex))
-				printf("%d\n", selid[i]);
-			else if (double_print && separator && items[selid[i]].text != items[selid[i]].text_output) {
-				if (separator_reverse) {
-					printf("%s%c%s\n", items[selid[i]].text_output, separator, items[selid[i]].text);
-				} else {
-					printf("%s%c%s\n", items[selid[i]].text, separator, items[selid[i]].text_output);
-				}
-			}
-			else
-				puts(items[selid[i]].text_output);
-		}
-	}
-
-	if (enabled(PrintIndex))
-		printf("%d\n", sel->index);
-	else if (double_print && separator && sel->text != sel->text_output) {
-		if (separator_reverse) {
-			printf("%s%c%s\n", sel->text_output, separator, sel->text);
-		} else {
-			printf("%s%c%s\n", sel->text, separator, sel->text_output);
-		}
-	}
-	else
-		puts(sel->text_output);
-
-}
-
-static void
+void
 printinput(void)
 {
-	for (int i = 0; i < selidsize; i++) {
-		if (selid[i] != -1 && (!sel || sel->id != selid[i])) {
-			if (enabled(PrintIndex))
-				printf("%d\n", selid[i]);
-			else
-				puts(items[selid[i]].text_output);
+	int i;
+	struct item *item;
+
+	for (i = 0; i < selidsize; i++) {
+		if (selid[i] != -1) {
+			item = &items[selid[i]];
+			printitem(item);
 		}
 	}
 	puts(text);
+	addhistory(text);
 }
 
-static void
+void
+printsel(void)
+{
+	int i;
+	struct item *item;
+
+	for (i = 0; i < selidsize; i++) {
+		if (selid[i] != -1 && (!sel || sel->id != selid[i])) {
+			item = &items[selid[i]];
+			printitem(item);
+		}
+	}
+
+	printitem(sel);
+}
+
+void
+printitem(struct item *item)
+{
+	if (!item)
+		return;
+
+	addhistoryitem(item);
+
+	if (enabled(PrintIndex)) {
+		printf("%d\n", sel->index);
+		return;
+	}
+
+	if (double_print && separator && item->text != item->text_output) {
+		if (separator_reverse) {
+			printf("%s%c%s\n", item->text_output, separator, item->text);
+		} else {
+			printf("%s%c%s\n", item->text, separator, item->text_output);
+		}
+		return;
+	}
+
+	puts(item->text_output);
+}
+
+void
 selsel(void)
 {
-	if (!sel)
+	if (!sel || backup_items != NULL)
 		return;
 	if (issel(sel->id)) {
 		for (int i = 0; i < selidsize; i++)

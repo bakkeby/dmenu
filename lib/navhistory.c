@@ -1,12 +1,24 @@
 static char *histfile;
 static char **history;
 static size_t histsz, histpos;
+static size_t cap = 0;
+static struct item *backup_items = NULL;
 
-static void
+void
+cleanhistory(void)
+{
+	int i;
+
+	for (i = 0; i < histsz; i++) {
+		free(history[i]);
+	}
+	free(history);
+}
+
+void
 loadhistory(void)
 {
 	FILE *fp = NULL;
-	static size_t cap = 0;
 	size_t llen;
 	char *line;
 
@@ -30,16 +42,8 @@ loadhistory(void)
 			break;
 		}
 
-		if (cap == histsz) {
-			cap += 64 * sizeof(char*);
-			history = realloc(history, cap);
-			if (!history) {
-				die("failed to realloc memory");
-			}
-		}
-		strtok(line, "\n");
-		history[histsz] = line;
-		histsz++;
+		addhistory(line);
+		free(line);
 	}
 	histpos = histsz;
 
@@ -88,39 +92,139 @@ navhistory(const Arg *arg)
 	match();
 }
 
-static void
-savehistory(char *input)
+void
+searchnavhistory(const Arg *arg)
+{
+	togglehistoryitems();
+	match();
+}
+
+void
+addhistory(char *input)
 {
 	unsigned int i;
-	FILE *fp;
 
 	if (!histfile ||
 	    0 == maxhist ||
 	    0 == strlen(input)) {
-		goto out;
+		return;
 	}
+
+	strtok(input, "\n");
+
+	if (histnodup) {
+		for (i = 0; i < histsz; i++) {
+			if (!strcmp(input, history[i])) {
+				return;
+			}
+		}
+	}
+
+	if (cap == histsz) {
+		reallochistory();
+	}
+
+	history[histsz] = strdup(input);
+	histsz++;
+}
+
+void
+addhistoryitem(struct item *item)
+{
+	if (separator && item->text_output && item->text != item->text_output) {
+		int histlen = strlen(item->text) + strlen(item->text_output) + 2;
+		char *histitem = ecalloc(histlen + 1, sizeof(char *));
+		snprintf(histitem, histlen, "%s%c%s", item->text, separator, item->text_output);
+		addhistory(histitem);
+		free(histitem);
+	} else {
+		addhistory(item->text);
+	}
+}
+
+void
+reallochistory(void)
+{
+	size_t oldcap = cap;
+	cap += 64;
+	char **newhistory = realloc(history, cap * sizeof *history);
+	if (!newhistory) {
+		die("failed to realloc memory");
+	}
+
+	history = newhistory;
+	memset(history + oldcap, 0, (cap - oldcap) * sizeof *history);
+}
+
+void
+togglehistoryitems(void)
+{
+	int i;
+	char *p;
+
+	if (!histfile)
+		return;
+
+	if (backup_items) {
+		restorebackupitems();
+		return;
+	}
+
+	backup_items = items;
+	items = calloc(histsz + 1, sizeof(struct item));
+	if (!items) {
+		die("cannot allocate memory");
+	}
+
+	for (i = 0; i < histsz; i++) {
+		items[i].text = strdup(history[i]);
+		if (separator && (p = sepchr(items[i].text, separator))) {
+			*p = '\0';
+			items[i].text_output = ++p;
+		} else {
+			items[i].text_output = items[i].text;
+		}
+	}
+}
+
+void
+restorebackupitems(void)
+{
+	size_t i;
+
+	if (!backup_items)
+		return;
+
+	for (i = 0; items && items[i].text; ++i) {
+		free(items[i].text);
+	}
+	free(items);
+
+	items = backup_items;
+	backup_items = NULL;
+}
+
+void
+savehistory(void)
+{
+	unsigned int i;
+	FILE *fp;
+
+	if (!histfile || 0 == maxhist)
+		return;
 
 	fp = fopen(histfile, "w");
 	if (!fp) {
 		die("failed to open %s", histfile);
 	}
+
 	for (i = histsz < maxhist ? 0 : histsz - maxhist; i < histsz; i++) {
 		if (0 >= fprintf(fp, "%s\n", history[i])) {
 			die("failed to write to %s", histfile);
 		}
 	}
-	if (histsz == 0 || !histnodup || (histsz > 0 && strcmp(input, history[histsz-1]) != 0)) { /* TODO */
-		if (0 >= fputs(input, fp)) {
-			die("failed to write to %s", histfile);
-		}
-	}
+
 	if (fclose(fp)) {
 		die("failed to close file %s", histfile);
 	}
-
-out:
-	for (i = 0; i < histsz; i++) {
-		free(history[i]);
-	}
-	free(history);
 }

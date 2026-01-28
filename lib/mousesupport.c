@@ -11,14 +11,17 @@ buttonpress(XEvent *e)
 		/* automatically close dmenu if the user clicks outside of dmenu, but
 		 * ignore the scroll wheel and buttons above that. */
 		if (ev->button <= Button3) {
+			cleanup();
 			exit(1);
 		}
 		return;
 	}
 
 	/* right-click: exit */
-	if (ev->button == Button3)
+	if (ev->button == Button3) {
+		cleanup();
 		exit(1);
+	}
 
 	/* input field */
 	w = (lines > 0 || !matches) ? mw : inputw;
@@ -68,17 +71,22 @@ buttonpress(XEvent *e)
 				(ev->x >= x + ((i / lines) * (w / cols))) && // column x start
 				(ev->x <= x + ((i / lines + 1) * (w / cols))) // column x end
 			) {
-				if (enabled(PrintIndex))
+				if (enabled(PrintIndex)) {
 					printf("%d\n", (item && !(state & ShiftMask)) ? item->index : -1);
-				else if (enabled(ContinuousOutput))
+				} else if (enabled(ContinuousOutput)) {
 					puts(item->text);
+					addhistoryitem(item);
+				}
+
 				if (!(state & ControlMask)) {
 					sel = item;
 					selsel();
 					if (disabled(ContinuousOutput) && disabled(PrintIndex))
 						printsel();
+					cleanup();
 					exit(0);
 				}
+
 				sel = item;
 				if (sel) {
 					selsel();
@@ -104,15 +112,20 @@ buttonpress(XEvent *e)
 			x += w;
 			w = MIN(TEXTW(item->text), mw - x - TEXTW(rsymbol));
 			if (ev->x >= x && ev->x <= x + w) {
-				if (enabled(PrintIndex))
+				if (enabled(PrintIndex)) {
 					printf("%d\n", (item && !(state & ShiftMask)) ? item->index : -1);
-				else if (enabled(ContinuousOutput))
+				} else if (enabled(ContinuousOutput)) {
 					puts(item->text);
+					addhistoryitem(item);
+				}
+
 				if (!(state & ControlMask)) {
 					sel = item;
 					selsel();
-					if (disabled(ContinuousOutput) && disabled(PrintIndex))
+					if (disabled(ContinuousOutput) && disabled(PrintIndex)) {
 						printsel();
+					}
+					cleanup();
 					exit(0);
 				}
 				sel = item;

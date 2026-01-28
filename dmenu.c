@@ -223,6 +223,9 @@ cleanup(void)
 
 	cleanup_config();
 	XUngrabKeyboard(dpy, CurrentTime);
+	savehistory();
+	cleanhistory();
+	restorebackupitems();
 	for (i = 0; i < SchemeLast; i++)
 		drw_scm_free(drw, scheme[i], 2);
 	for (i = 0; items && items[i].text; ++i)
@@ -787,6 +790,9 @@ selectandresume(const Arg *arg)
 	if (enabled(RestrictReturn))
 		return;
 	selsel();
+	if (enabled(ContinuousOutput)) {
+		printitem(sel);
+	}
 }
 
 void
@@ -795,15 +801,7 @@ selectinput(const Arg *arg)
 	if (enabled(RestrictReturn))
 		return;
 
-	if (enabled(PrintInputText))
-		puts((sel && !cursor) ? sel->text : text);
-	else if (enabled(ContinuousOutput)) {
-		puts(text);
-	}
-
-	savehistory(text);
-	if (disabled(ContinuousOutput) && disabled(PrintInputText))
-		printinput();
+	printinput();
 	cleanup();
 	exit(0);
 }
@@ -813,23 +811,28 @@ selectandexit(const Arg *arg)
 {
 	if (enabled(RestrictReturn) && !sel)
 		return;
+
 	if (enabled(PrintInputText)) {
-		puts((sel && !cursor) ? sel->text : text);
-	} else if (enabled(ContinuousOutput)) {
-		if (enabled(PrintIndex)) {
-			printf("%d\n", sel ? sel->index : -1);
-		} else {
-			puts(sel ? sel->text_output : text);
-		}
-	}
-	savehistory(sel ? sel->text : text);
-	if (disabled(ContinuousOutput) && disabled(PrintInputText)) {
-		if (sel) {
+		if (sel && !cursor) {
 			printsel();
 		} else {
-			puts(text);
+			printinput();
 		}
+	} else if (enabled(ContinuousOutput)) {
+		if (sel) {
+			printitem(sel);
+		} else if (enabled(PrintIndex)) {
+			printf("%d\n", -1);
+		} else {
+			puts(text);
+			addhistory(text);
+		}
+	} else if (sel) {
+		printsel();
+	} else {
+		printinput();
 	}
+
 	cleanup();
 	exit(0);
 }
