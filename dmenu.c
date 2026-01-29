@@ -814,7 +814,7 @@ selectandexit(const Arg *arg)
 
 	if (enabled(PrintInputText)) {
 		if (sel && !cursor) {
-			printsel();
+			printselected();
 		} else {
 			printinput();
 		}
@@ -824,11 +824,10 @@ selectandexit(const Arg *arg)
 		} else if (enabled(PrintIndex)) {
 			printf("%d\n", -1);
 		} else {
-			puts(text);
-			addhistory(text);
+			printtext(text);
 		}
 	} else if (sel) {
-		printsel();
+		printselected();
 	} else {
 		printinput();
 	}

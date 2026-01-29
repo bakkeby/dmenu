@@ -66,7 +66,7 @@ exactmatch(void)
 	curr = sel = matches;
 
 	if (enabled(InstantReturn) && matches && matches==matchend && !lsubstr) {
-		printsel();
+		printitem(matches);
 		cleanup();
 		exit(0);
 	}

@@ -1,4 +1,25 @@
 static void
+clickitem(struct item *item, XButtonEvent *ev)
+{
+	if (enabled(RestrictReturn) && (ev->state & (ShiftMask | ControlMask)))
+		return;
+
+	if (enabled(ContinuousOutput))
+		printitem(item);
+
+	sel = item;
+	if (!(ev->state & ControlMask)) {
+		if (disabled(ContinuousOutput))
+			printselected(ev->state);
+		cleanup();
+		exit(0);
+	}
+
+	selsel();
+	drawmenu();
+}
+
+static void
 buttonpress(XEvent *e)
 {
 	struct item *item;
@@ -71,27 +92,7 @@ buttonpress(XEvent *e)
 				(ev->x >= x + ((i / lines) * (w / cols))) && // column x start
 				(ev->x <= x + ((i / lines + 1) * (w / cols))) // column x end
 			) {
-				if (enabled(PrintIndex)) {
-					printf("%d\n", (item && !(state & ShiftMask)) ? item->index : -1);
-				} else if (enabled(ContinuousOutput)) {
-					puts(item->text);
-					addhistoryitem(item);
-				}
-
-				if (!(state & ControlMask)) {
-					sel = item;
-					selsel();
-					if (disabled(ContinuousOutput) && disabled(PrintIndex))
-						printsel();
-					cleanup();
-					exit(0);
-				}
-
-				sel = item;
-				if (sel) {
-					selsel();
-					drawmenu();
-				}
+				clickitem(item, ev);
 				return;
 			}
 		}
@@ -112,27 +113,7 @@ buttonpress(XEvent *e)
 			x += w;
 			w = MIN(TEXTW(item->text), mw - x - TEXTW(rsymbol));
 			if (ev->x >= x && ev->x <= x + w) {
-				if (enabled(PrintIndex)) {
-					printf("%d\n", (item && !(state & ShiftMask)) ? item->index : -1);
-				} else if (enabled(ContinuousOutput)) {
-					puts(item->text);
-					addhistoryitem(item);
-				}
-
-				if (!(state & ControlMask)) {
-					sel = item;
-					selsel();
-					if (disabled(ContinuousOutput) && disabled(PrintIndex)) {
-						printsel();
-					}
-					cleanup();
-					exit(0);
-				}
-				sel = item;
-				if (sel) {
-					selsel();
-					drawmenu();
-				}
+				clickitem(item, ev);
 				return;
 			}
 		}

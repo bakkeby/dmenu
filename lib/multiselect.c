@@ -19,12 +19,12 @@ printinput(void)
 			printitem(item);
 		}
 	}
-	puts(text);
-	addhistory(text);
+
+	printtext(text);
 }
 
 void
-printsel(void)
+printselected()
 {
 	int i;
 	struct item *item;
@@ -62,6 +62,16 @@ printitem(struct item *item)
 	}
 
 	puts(item->text_output);
+}
+
+void
+printtext(char *text)
+{
+	if (!text || !strlen(text))
+		return;
+
+	addhistory(text);
+	puts(text);
 }
 
 void
