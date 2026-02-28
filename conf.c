@@ -225,8 +225,8 @@ load_config(void)
 	char *config_file = get_config_path(cfg_filename);
 
 	config_init(&cfg);
-	char *config_path = strdup(config_file);
-	config_set_include_dir(&cfg, path_dirname(config_path));
+	char *config_path = path_dirname(config_file);
+	config_set_include_dir(&cfg, config_path);
 	free(config_path);
 
 	if (!config_read_file(&cfg, config_file)) {
