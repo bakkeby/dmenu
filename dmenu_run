@@ -1,6 +1,23 @@
-#!/bin/sh
+#!/bin/bash
 export _JAVA_AWT_WM_NONREPARENTING=1
+export LESS='-R -+F'
+export MANPAGER="sh -c 'col -bx | bat --color=always --language man --style=plain --paging=always'"
+# Prevent groff from emitting real ANSI SGR and OSC8 hyperlink escapes by
+# default when it thinks that it is talking to a terminal. Without this
+# we may end up with groff including additional escape codes due to how
+# a new session is started using setsid. This is in the context of man
+# pages.
+export GROFF_NO_SGR=1
+TERMLIST=~/bin/dmenu_terminal_programs.txt
+TERMINAL_EMULATOR=st
+
 dmenu_path | dmenu -H "${XDG_CACHE_HOME:-$HOME/.cache/}/dmenu_run.hist" "$@" |
 	while read -r cmd; do
+		if [[ -f $TERMLIST ]] && grep -qx "${cmd%% *}" "$TERMLIST"; then
+			cmd="$TERMINAL_EMULATOR $cmd"
+		fi
+		# Expand ~/ to $HOME
+		cmd=$(sed -r 's#(^| )~/#\1'$HOME'/#g' <<<"$cmd")
+		echo "$cmd | xargs setsid -f"
 		echo "$cmd" | xargs setsid -f > /dev/null 2>&1
 	done

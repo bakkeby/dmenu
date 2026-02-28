@@ -84,6 +84,8 @@ int disabled(const long functionality);
 void enablefunc(const long functionality);
 void disablefunc(const long functionality);
 void togglefunc(const long functionality);
+char *xasprintf(const char *fmt, ...);
+char *path_dirname(const char *path);
 
 #ifdef __linux__
 size_t strlcpy(char * __restrict dst, const char * __restrict src, size_t dsize);

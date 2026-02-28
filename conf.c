@@ -3,7 +3,10 @@
 static config_t cfg;
 static int config_loaded = 0;
 
-void set_config_path(const char* filename, char *config_path, char *config_file);
+const char *progname = "dmenu";
+static char *cfg_filename = "dmenu.cfg";
+
+char *get_config_path(const char* filename);
 int setting_length(const config_setting_t *cfg);
 const char *setting_get_string_elem(const config_setting_t *cfg, int i);
 int setting_get_int_elem(const config_setting_t *cfg, int i);
@@ -193,32 +196,39 @@ config_setting_get_unsigned_int(const config_setting_t *cfg_item, unsigned int *
 	return 1;
 }
 
-void
-set_config_path(const char* filename, char *config_path, char *config_file)
+char *
+get_config_path(const char *filename)
 {
-	const char* xdg_config_home = getenv("XDG_CONFIG_HOME");
-	const char* home = getenv("HOME");
+	if (!filename)
+		return NULL;
 
-	if (xdg_config_home && xdg_config_home[0] != '\0') {
-		snprintf(config_path, PATH_MAX, "%s/dmenu/", xdg_config_home);
-	} else if (home) {
-		snprintf(config_path, PATH_MAX, "%s/.config/dmenu/", home);
-	} else {
-		return;
+	if (startswith("/", filename)) {
+		return strdup(filename);
 	}
 
-	snprintf(config_file, PATH_MAX, "%s/%s", config_path, filename);
+	const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
+	if (xdg_config_home && xdg_config_home[0] != '\0') {
+		return xasprintf("%s/%s/%s", xdg_config_home, progname, filename);
+	}
+
+	const char *home = getenv("HOME");
+	if (home && home[0] != '\0') {
+		return xasprintf("%s/.config/%s/%s", home, progname, filename);
+	}
+
+	return NULL;
 }
 
 void
 load_config(void)
 {
-	char config_path[PATH_MAX] = {0};
-	char config_file[PATH_MAX] = {0};
+	char *config_file = get_config_path(cfg_filename);
 
-	set_config_path("dmenu.cfg", config_path, config_file);
 	config_init(&cfg);
-	config_set_include_dir(&cfg, config_path);
+	char *config_path = strdup(config_file);
+	config_set_include_dir(&cfg, path_dirname(config_path));
+	free(config_path);
+
 	if (!config_read_file(&cfg, config_file)) {
 		if (strcmp(config_error_text(&cfg), "file I/O error")) {
 			fprintf(stderr, "Error reading config at %s\n", config_file);
@@ -229,9 +239,11 @@ load_config(void)
 		}
 
 		config_destroy(&cfg);
+		free(config_file);
 		return;
 	}
 
+	free(config_file);
 	config_loaded = 1;
 }
 
