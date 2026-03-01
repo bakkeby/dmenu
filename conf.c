@@ -188,11 +188,10 @@ config_setting_get_unsigned_int(const config_setting_t *cfg_item, unsigned int *
 
 	int integer = config_setting_get_int(cfg_item);
 
-	if (integer >= 0) {
-		*ptr = (unsigned int)integer;
-		return 1;
-	}
+	if (integer < 0)
+		return 0;
 
+	*ptr = (unsigned int)integer;
 	return 1;
 }
 
