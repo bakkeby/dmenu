@@ -378,6 +378,7 @@ load_functionality(void)
 	readfunc(ColorEmoji);
 	readfunc(ContinuousOutput);
 	readfunc(FuzzyMatch);
+	readfunc(MatchOutputText);
 	readfunc(HighlightAdjacent);
 	readfunc(Incremental);
 	readfunc(InstantReturn);

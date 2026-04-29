@@ -1330,6 +1330,8 @@ usage(FILE *stream)
 	fprintf(stream, ofmt, "    -NoContinuousOutput", "dmenu prints out the selected items when enter is pressed", disabled(ContinuousOutput) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -FuzzyMatch", "allows fuzzy-matching of items in dmenu", enabled(FuzzyMatch) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -NoFuzzyMatch", "enables exact matching of items in dmenu", disabled(FuzzyMatch) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -MatchOutputText", "allows matching on output text when split using delimiter", enabled(MatchOutputText) ? " (default)" : "");
+	fprintf(stream, ofmt, "    -NoMatchOutputText", "disables matching on output text when split using delimiter", disabled(MatchOutputText) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -HighlightAdjacent", "makes dmenu highlight items adjacent to the selected item", enabled(HighlightAdjacent) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -NoHighlightAdjacent", "only the selected item is highlighted", disabled(HighlightAdjacent) ? " (default)" : "");
 	fprintf(stream, ofmt, "    -Incremental", "makes dmenu print out the current text each time a key is pressed", enabled(Incremental) ? " (default)" : "");
@@ -1539,6 +1541,10 @@ main(int argc, char *argv[])
 			enablefunc(FuzzyMatch);
 		} else if arg("-NoFuzzyMatch") {
 			disablefunc(FuzzyMatch);
+		} else if arg("-MatchOutputText") {
+			enablefunc(MatchOutputText);
+		} else if arg("-NoMatchOutputText") {
+			disablefunc(MatchOutputText);
 		} else if arg("-HighlightAdjacent") {
 			enablefunc(HighlightAdjacent);
 		} else if arg("-NoHighlightAdjacent") {

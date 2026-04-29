@@ -32,12 +32,35 @@ fuzzymatch(void)
 
 	/* walk through all items */
 	for (it = items; it && it->text; it++) {
-		if (text_len) {
-			itext_len = strlen(it->text);
+		if (!text_len) {
+			appenditem(it, &matches, &matchend);
+			continue;
+		}
+
+		itext_len = strlen(it->text);
+		pidx = 0; /* pointer */
+		sidx = eidx = -1; /* start of match, end of match */
+		/* walk through item text */
+		for (i = 0; i < itext_len && (c = it->text[i]); i++) {
+			/* fuzzy match pattern */
+			if (!fstrncmp(&text[pidx], &c, 1)) {
+				if (sidx == -1)
+					sidx = i;
+				pidx++;
+				if (pidx == text_len) {
+					eidx = i;
+					break;
+				}
+			}
+		}
+
+		if (eidx == -1 && enabled(MatchOutputText)) {
+			itext_len = strlen(it->text_output);
 			pidx = 0; /* pointer */
 			sidx = eidx = -1; /* start of match, end of match */
-			/* walk through item text */
-			for (i = 0; i < itext_len && (c = it->text[i]); i++) {
+
+			/* walk through item output text */
+			for (i = 0; i < itext_len && (c = it->text_output[i]); i++) {
 				/* fuzzy match pattern */
 				if (!fstrncmp(&text[pidx], &c, 1)) {
 					if (sidx == -1)
@@ -49,18 +72,17 @@ fuzzymatch(void)
 					}
 				}
 			}
-			/* build list of matches */
-			if (eidx != -1) {
-				/* compute distance */
-				/* add penalty if match starts late (log(sidx+2))
-				 * add penalty for long a match without many matching characters */
-				it->distance = log(sidx + 2) + (double)(eidx - sidx - text_len);
-				/* fprintf(stderr, "distance %s %f\n", it->text, it->distance); */
-				appenditem(it, &matches, &matchend);
-				number_of_matches++;
-			}
-		} else {
+		}
+
+		/* build list of matches */
+		if (eidx != -1) {
+			/* compute distance */
+			/* add penalty if match starts late (log(sidx+2))
+			 * add penalty for long a match without many matching characters */
+			it->distance = log(sidx + 2) + (double)(eidx - sidx - text_len);
+			/* fprintf(stderr, "distance %s %f\n", it->text, it->distance); */
 			appenditem(it, &matches, &matchend);
+			number_of_matches++;
 		}
 	}
 

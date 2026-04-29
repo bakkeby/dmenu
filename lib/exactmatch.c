@@ -24,17 +24,29 @@ exactmatch(void)
 	lhpprefix = hpprefixend = NULL;
 	for (item = items; item && item->text; item++)
 	{
+		/* Try matching tokens against item->text first */
 		for (i = 0; i < tokc; i++)
 			if (!fstrstr(item->text, tokv[i]))
 				break;
+
+		/* If item->text didn't match all tokens, try item->text_output */
+		const char *match_src = item->text;
+		if (i != tokc && item->text_output && enabled(MatchOutputText)) {
+			match_src = item->text_output;
+			for (i = 0; i < tokc; i++)
+				if (!fstrstr(item->text_output, tokv[i]))
+					break;
+		}
+
 		if (i != tokc && !(dynamic && *dynamic)) /* not all tokens match */
 			continue;
+
 		/* exact matches go first, then prefixes with high priority, then prefixes, then substrings */
-		if (!tokc || !sort || !fstrncmp(text, item->text, textsize))
+		if (!tokc || !sort || !fstrncmp(text, match_src, textsize))
 			appenditem(item, &matches, &matchend);
-		else if (item->hp && !fstrncmp(tokv[0], item->text, len))
+		else if (item->hp && !fstrncmp(tokv[0], match_src, len))
 			appenditem(item, &lhpprefix, &hpprefixend);
-		else if (!fstrncmp(tokv[0], item->text, len))
+		else if (!fstrncmp(tokv[0], match_src, len))
 			appenditem(item, &lprefix, &prefixend);
 		else
 			appenditem(item, &lsubstr, &substrend);

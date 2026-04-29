@@ -34,6 +34,7 @@ static uint64_t functionality = 0
 //	|ColorEmoji // enables color emoji support (removes Xft workaround)
 //	|ContinuousOutput // makes dmenu print out selected items immediately rather than at the end
 	|FuzzyMatch // allows fuzzy-matching of items in dmenu
+//	|MatchOutputText // allows matching on output text when split using delimiter
 //	|HighlightAdjacent // makes dmenu highlight items adjacent to the selected item
 //	|Incremental // makes dmenu print out the current text each time a key is pressed
 //	|InstantReturn // makes dmenu select an item immediately if there is only one matching option left
