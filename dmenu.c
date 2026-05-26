@@ -762,7 +762,8 @@ paste(const Arg *arg)
 void
 pastesel(void)
 {
-	char *p, *q;
+	char *p;
+	ssize_t len;
 	int di;
 	unsigned long dl;
 	Atom da;
@@ -771,7 +772,12 @@ pastesel(void)
 	if (XGetWindowProperty(dpy, win, utf8, 0, (sizeof text / 4) + 1, False,
 	                   utf8, &da, &di, &dl, &dl, (unsigned char **)&p)
 	    == Success && p) {
-		insert(p, (q = strchr(p, '\n')) ? q - p : (ssize_t)strlen(p));
+
+		len = (ssize_t)strlen(p);
+		/* Drop the last newline, if any. */
+		if (len && p[len - 1] == '\n')
+			len--;
+		insert(p, len);
 		XFree(p);
 	}
 	drawmenu();
