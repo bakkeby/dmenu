@@ -422,7 +422,7 @@ drawmenu(void)
 				drawitem(item, ix, y += bh, mw - ix);
 			}
 		}
-	} else if (matches) {
+	} else if (matches && curr) {
 		/* draw horizontal list */
 		x += inputw;
 		w = TEXTW(left_symbol);
@@ -743,7 +743,7 @@ keypress(XEvent *e)
 			fflush(stdout);
 		}
 		drawmenu();
-	} else if (disabled(NoInput) && !iscntrl(*buf) && type) {
+	} else if (disabled(NoInput) && len > 0 && !iscntrl(*buf) && type) {
 		insert(buf, len);
 		if (enabled(Incremental)) {
 			puts(text);
@@ -1030,6 +1030,8 @@ setup(void)
 #ifdef XINERAMA
 	i = 0;
 	if (parentwin == root && (info = XineramaQueryScreens(dpy, &n))) {
+		if (n < 1)
+			die("Xinerama reported no screens");
 		XGetInputFocus(dpy, &w, &di);
 		if (mon >= 0 && mon < n)
 			i = mon;
@@ -1052,6 +1054,10 @@ setup(void)
 			for (i = 0; i < n; i++)
 				if (INTERSECT(x, y, 1, 1, info[i]) != 0)
 					break;
+
+		/* fallback to the first screen if there is no intersection */
+		if (i >= n)
+			i = 0;
 
 		xoffset = info[i].x_org;
 		yoffset = info[i].y_org;
