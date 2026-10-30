@@ -922,7 +922,7 @@ readstdin(void)
 			if (!(items = realloc(items, itemsize * sizeof(*items))))
 				die("cannot realloc %zu bytes:", itemsize * sizeof(*items));
 		}
-		if (line[len - 1] == '\n')
+		if (len > 0 && line[len - 1] == '\n')
 			line[len - 1] = '\0';
 		if (!(items[i].text = strdup(line)))
 			die("strdup:");
