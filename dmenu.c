@@ -1,6 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #include <ctype.h>
 #include <locale.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -916,6 +917,8 @@ readstdin(void)
 	for (i = 0; (len = getline(&line, &linesize, stdin)) != -1; i++) {
 		if (i + 1 >= itemsize) {
 			itemsize += 256;
+			if (itemsize > SIZE_MAX / sizeof(*items))
+				die("too many items");
 			if (!(items = realloc(items, itemsize * sizeof(*items))))
 				die("cannot realloc %zu bytes:", itemsize * sizeof(*items));
 		}
@@ -1167,8 +1170,8 @@ setup(void)
 	if ((xim = XOpenIM(dpy, NULL, NULL, NULL)) == NULL)
 		die("XOpenIM failed: could not open input device");
 
-	if (xic = XCreateIC(xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
-	                    XNClientWindow, win, XNFocusWindow, win, NULL) == NULL)
+	if ((xic = XCreateIC(xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+	                    XNClientWindow, win, XNFocusWindow, win, NULL)) == NULL)
 		die("XCreateIC failed: could not obtain input context");
 
 	if (enabled(Managed)) {
